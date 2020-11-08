@@ -1,2 +1,2 @@
 # utility_abap_cloud
-cloud version
+library that simplifies ABAP development - cloud version
