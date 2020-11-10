@@ -1,14 +1,14 @@
-class ZCX_LS_EXCEPTION definition
+class zcx_ls_exception definition
   public
   final
   create public .
 
-public section.
-protected section.
-private section.
-ENDCLASS.
+  public section.
+  protected section.
+  private section.
+endclass.
 
 
 
-CLASS ZCX_LS_EXCEPTION IMPLEMENTATION.
-ENDCLASS.
+class zcx_ls_exception implementation.
+endclass.
