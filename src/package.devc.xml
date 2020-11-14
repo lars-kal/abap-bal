@@ -3,7 +3,7 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <DEVC>
-    <CTEXT>abap_toolkit - core</CTEXT>
+    <CTEXT>abap_toolkit_cloud</CTEXT>
    </DEVC>
   </asx:values>
  </asx:abap>

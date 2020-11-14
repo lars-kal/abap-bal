@@ -20,10 +20,14 @@ class zls_cl_at_unit_test implementation.
 
     data(lv_string) = conv string(  'test' ).
 
-    break-point.
+*    break-point.
 
     data(lo_obj) = hlp->rtti( lv_string ).
     data(lo_obj2) = hlp->rtti( hlp ).
+
+
+    hlp->text( ).
+    "hlp->i18n-wm- ).
 
     "implement tests here
 

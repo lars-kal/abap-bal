@@ -17,7 +17,7 @@ class zls_cx_at_error definition
       importing
         textid   like textid optional
         previous like previous optional
-        txt      type string optional
+        txt      type any optional
           preferred parameter txt.
   protected section.
   private section.
@@ -37,7 +37,7 @@ CLASS ZLS_CX_AT_ERROR IMPLEMENTATION.
 
     super->constructor( textid = textid previous = previous ).
 
-     ms_txt = hlp->text( txt )->get( txt  ).
+*     ms_txt = hlp->text( txt )->get( txt  ).
 
 
    endmethod.

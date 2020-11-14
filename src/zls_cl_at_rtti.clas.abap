@@ -69,9 +69,9 @@ CLASS ZLS_CL_AT_RTTI IMPLEMENTATION.
             mo_elemdescr = cast #( lo_typedescr ).
 
           when others.
-            raise exception new zls_cx_at_error( hlp->msg(
+*            raise exception new zls_cx_at_error( hlp->msg( ''
            " ls_bapi "
-              ) ).
+*              ) ).
 
         endcase.
 
