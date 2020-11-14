@@ -4,7 +4,7 @@ class zls_cl_at_main definition
 
   public section.
 
-    interfaces zls_if_at_types.
+*    interfaces zls_if_at_types.
 
     types ty type zls_cl_at_types=>ty.
     types ty_s type zls_cl_at_types=>ty_s.

@@ -31,6 +31,8 @@ class zls_cl_at_string implementation.
 
   method trim.
 
+"test
+
   endmethod.
 
   method upper_case.

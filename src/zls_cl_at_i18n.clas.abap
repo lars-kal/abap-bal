@@ -221,8 +221,8 @@ CLASS ZLS_CL_AT_I18N IMPLEMENTATION.
     loop at lt_const reference into data(lr_row).
       insert initial line into table t_buffer_const reference into data(lr_row_dest).
       lr_row_dest->key = lr_row->*.
-      assign (lr_row_dest->key) to field-symbol(<value>).
-      lr_row_dest->val = <value>.
+*      assign (lr_row_dest->key) to field-symbol(<value>).
+*      lr_row_dest->val = <value>.
     endloop.
 
 
