@@ -5,6 +5,12 @@
    <MASTER_LANGUAGE>E</MASTER_LANGUAGE>
    <STARTING_FOLDER>/src/</STARTING_FOLDER>
    <FOLDER_LOGIC>PREFIX</FOLDER_LOGIC>
+   <REQUIREMENTS>
+    <item>
+     <COMPONENT>abap</COMPONENT>
+     <MIN_RELEASE>753</MIN_RELEASE>
+    </item>
+   </REQUIREMENTS>
   </DATA>
  </asx:values>
 </asx:abap>
