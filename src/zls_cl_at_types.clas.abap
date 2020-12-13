@@ -22,11 +22,18 @@ class zls_cl_at_types definition
           low    type string,
           high   type string,
         end of range,
+        begin of t100,
+          id   type string,
+          no   type string,
+          lang type string,
+          text type string,
+        end of t100,
       end of ty_s.
 
     types:
       begin of ty_t,
         range type standard table of ty_s-range with empty key,
+        t100  type standard table of ty_S-t100 with empty key,
       end of ty_t.
     types:
       begin of ty,

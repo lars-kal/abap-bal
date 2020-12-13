@@ -17,21 +17,27 @@ class zls_cl_at_unit_test implementation.
 
     data(hlp) = new zls_cl_at_main(  ).
 
-
-    data(lv_string) = conv string(  'test' ).
-
-*    break-point.
-
+    data(lv_string) = conv string( 'test').
     data(lo_obj) = hlp->rtti( lv_string ).
     data(lo_obj2) = hlp->rtti( hlp ).
 
-
     hlp->text( ).
-    "hlp->i18n-wm- ).
-
-    "implement tests here
 
 
+*    if 'test' = hlp->text( lv_text )->get(  ).
+    try.
+
+        data(lv_text) = hlp->i18n-tech-no_data_found.
+        raise exception new zls_cx_at_error( lv_text ).
+
+
+
+      catch zls_cx_at_error into data(lx).
+        case lx->i18n_txt.
+          when hlp->i18n-tech-unexpected_error.
+            raise exception lx.
+        endcase.
+    endtry.
   endmethod.
 
 endclass.

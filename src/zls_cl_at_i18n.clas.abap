@@ -253,7 +253,7 @@ CLASS ZLS_CL_AT_I18N IMPLEMENTATION.
     endloop.
 
     if lt_range_t100 is not initial.
-      hlp->db->read_t100( lt_range_t100 ).
+      hlp->db->read_t100_multi( lt_range_t100 ).
     endif.
 
   endmethod.
@@ -270,7 +270,7 @@ CLASS ZLS_CL_AT_I18N IMPLEMENTATION.
         data(lv_msgno) = hlp->string( val )->trim( )->upper_case( )->segment( sep = '/' index = 1 )->result.
         data(lv_msgid) = hlp->string( val )->trim( )->upper_case( )->segment( sep = '/' index = 2 )->result.
 
-        hlp->db->read_t100( value #(
+        hlp->db->read_t100_multi( value #(
 
 
           ) ).
