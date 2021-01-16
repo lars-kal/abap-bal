@@ -50,14 +50,14 @@ class ltcl_unit_test implementation.
 
 *do 10000 times.
 
-    hlp=>msg->map(
+    hlp=>msg->main(
       exporting
         input  = ls_t100
       importing
         result = ls_bapi
     ).
 
-    hlp=>msg->map(
+    hlp=>msg->main(
     exporting
       input  = ls_t100
     importing
@@ -66,7 +66,7 @@ class ltcl_unit_test implementation.
 *enddo.
 
 *  do 10000 times.
-    hlp=>msg->map(
+    hlp=>msg->main(
     exporting
       input  = lt_bapi
     importing

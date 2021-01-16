@@ -10,23 +10,22 @@ class zls_hlp_cl_msg definition
         txt      type string,
         is_error type abap_bool,
         type     type abap_bool,
-*        id       type string,
-*        no       type string,
-*        v1       type string,
-*        v2       type string,
-*        v3       type string,
-*        v4       type string,
-        t_msg    type bapirettab,
-        s_msg    type line of bapirettab,
+        t_bapi   type bapirettab,
+        s_bapi   type line of bapirettab,
       end of ty_s_result_get.
-    types ty_o_me type ref to zls_hlp_cl_msg.
 
-    class-methods get
+    methods get
       importing
         val           type any
-        langu         type any default sy-langu
+        type          type any optional
+      returning
+        value(result) type ty_s_result_get.
+
+    methods get_by_msg
+      importing
         id            type any optional
         no            type any optional
+        type          type any optional
         v1            type any optional
         v2            type any optional
         v3            type any optional
@@ -34,27 +33,29 @@ class zls_hlp_cl_msg definition
       returning
         value(result) type ty_s_result_get.
 
-    class-methods map
-      importing
-        input  type any
-      exporting
-        result type any.
-
-    class-methods class_constructor.
-    class-methods log_factory
-      returning
-        value(result) type ty_o_me.
-
-    methods log
+    methods get_by_text
       importing
         val           type any
-      returning
-        value(result) type ty_o_me.
-
-    methods log_get
+        type          type any optional
+        v1            type any optional
+        v2            type any optional
+        v3            type any optional
+        v4            type any optional
       returning
         value(result) type ty_s_result_get.
 
+    methods main
+      importing
+        input           type any
+        io_typedescr_in type ref to cl_abap_typedescr optional
+      exporting
+        value(result)   type any.
+
+    class-methods factory
+      returning
+        value(r_result) type ref to zls_hlp_cl_msg.
+
+    class-methods class_constructor.
 
   protected section.
 
@@ -63,18 +64,33 @@ class zls_hlp_cl_msg definition
 
     class-data: st_groups type ty_t_string_deep.
 
-    class-methods _map_structure_2_structure
+    data mo_typedescr_in  type ref to cl_abap_typedescr.
+    data mo_typedescr_out type ref to cl_abap_typedescr.
+
+    methods _map_struct_2_struct
       importing
         is_in  type any
       exporting
         es_out type any.
 
-private section.
-ENDCLASS.
+    methods _map_obj_2_tab
+      importing
+        value  type any
+      exporting
+        result type bapiret2_tab.
+
+
+endclass.
 
 
 
-CLASS zls_hlp_cl_msg IMPLEMENTATION.
+class zls_hlp_cl_msg implementation.
+
+  method factory.
+
+    r_result = new #( ).
+
+  endmethod.
 
 
   method class_constructor.
@@ -86,6 +102,14 @@ CLASS zls_hlp_cl_msg IMPLEMENTATION.
        ) )
        ( value #( ( `TYPE`) ( `MSGTY`) ( `MSGTYP`) ( `SEVERITY`) ( `SYST_MSGTY`) ( `BAPI_MTYPE`)
        ) )
+       ( value #( ( `MSGV1`) ( `MESSAGE_V1`)
+       ) )
+       ( value #( ( `MSGV2`) ( `MESSAGE_V2`)
+       ) )
+       ( value #( ( `MSGV3`) ( `MESSAGE_V3`)
+       ) )
+       ( value #( ( `MSGV4`) ( `MESSAGE_V4`)
+       ) )
      ).
 
   endmethod.
@@ -93,32 +117,34 @@ CLASS zls_hlp_cl_msg IMPLEMENTATION.
 
   method get.
 
-    map(
+    main(
       exporting
         input  = val
       importing
-        result = result-t_msg
+        result = result-t_bapi
     ).
 
-
-
-  "test
-
-    if result-t_msg is initial.
+    if result-t_bapi is initial.
       return.
     endif.
 
-    result-s_msg = result-t_msg[ 1 ].
+    if type is not initial.
+      loop at result-t_bapi reference into data(lr_bapi).
+        lr_bapi->type = type.
+      endloop.
+    endif.
 
-    message id result-s_msg-id type 'I' number result-s_msg-number
-    with result-s_msg-message_v1 result-s_msg-message_v2 result-s_msg-message_v3 result-s_msg-message_v4
+    result-s_bapi = result-t_bapi[ 1 ].
+
+    message id result-s_bapi-id type 'I' number result-s_bapi-number
+    with result-s_bapi-message_v1 result-s_bapi-message_v2 result-s_bapi-message_v3 result-s_bapi-message_v4
     into result-txt.
     clear: sy-msgty,sy-msgno, sy-msgid, sy-msgv1, sy-msgv2, sy-msgv3, sy-msgv4.
 
     result-type = cond #(
-        when line_exists( result-t_msg[ type = 'E' ] ) then 'E'
-        when line_exists( result-t_msg[ type = 'W' ] ) then 'W'
-        when line_exists( result-t_msg[ type = 'S' ] ) then 'S'
+        when line_exists( result-t_bapi[ type = 'E' ] ) then 'E'
+        when line_exists( result-t_bapi[ type = 'W' ] ) then 'W'
+        when line_exists( result-t_bapi[ type = 'S' ] ) then 'S'
         ) .
 
     result-is_error = switch #( result-type when 'E' then abap_true else abap_false ).
@@ -126,42 +152,51 @@ CLASS zls_hlp_cl_msg IMPLEMENTATION.
   endmethod.
 
 
-  method log.
+  method get_by_msg.
+
+    result = get( value bapiret2(
+      type       = type
+      number     = no
+      id         = id
+      message_v1 = v1
+      message_v2 = v2
+      message_v3 = v3
+      message_v4 = v4
+    ) ).
 
   endmethod.
 
 
-  method log_factory.
+  method main.
 
-  endmethod.
+    """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+    " check in/out types
+
+    mo_typedescr_in = cond #( when io_typedescr_in is initial
+        then cl_abap_typedescr=>describe_by_data( input )
+        else io_typedescr_in ).
+
+    mo_typedescr_out = cl_abap_typedescr=>describe_by_data( result ).
 
 
-  method log_get.
-
-  endmethod.
-
-
-  method map.
+    """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+    " structure to any
 
     field-symbols <tab_in>  type standard table.
     field-symbols <tab_out> type standard table.
 
-    data(lv_kind_in)  =  cl_abap_typedescr=>describe_by_data( input  )->kind.
-    data(lv_kind_out) =  cl_abap_typedescr=>describe_by_data( result )->kind.
-
-    case lv_kind_in.
-
+    case mo_typedescr_in->kind.
 
         """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
         " structure to any
 
       when cl_abap_typedescr=>kind_struct.
 
-        case  lv_kind_out.
+        case  mo_typedescr_out->kind.
 
           when cl_abap_typedescr=>kind_struct.
 
-            _map_structure_2_structure(
+            _map_struct_2_struct(
               exporting
                 is_in  = input
               importing
@@ -173,9 +208,10 @@ CLASS zls_hlp_cl_msg IMPLEMENTATION.
             assign result to <tab_out>.
             insert initial line into table <tab_out> assigning field-symbol(<row_out>).
 
-            map(
+            factory( )->main(
               exporting
                 input = input
+                io_typedescr_in = mo_typedescr_in
               importing
                 result = <row_out>
             ).
@@ -189,18 +225,18 @@ CLASS zls_hlp_cl_msg IMPLEMENTATION.
 
       when cl_abap_typedescr=>kind_table.
 
-        case  lv_kind_out.
+        case  mo_typedescr_out->kind.
 
           when cl_abap_typedescr=>kind_struct.
 
             assign input to <tab_in>.
             assign <tab_in>[ 1 ] to field-symbol(<row_in>).
 
-            map(
+            main(
               exporting
                 input = <row_in>
               importing
-                 result = result
+                result = result
              ).
 
 
@@ -213,7 +249,7 @@ CLASS zls_hlp_cl_msg IMPLEMENTATION.
 
               insert initial line into table <tab_out> assigning <row_out>.
 
-              map(
+              main(
                 exporting
                   input = <row_in>
                 importing
@@ -223,17 +259,40 @@ CLASS zls_hlp_cl_msg IMPLEMENTATION.
             endloop.
 
         endcase.
+
+        """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+        " table to any
+
+      when cl_abap_typedescr=>kind_ref.
+
+        _map_obj_2_tab(
+          exporting
+            value  = input
+          importing
+            result = data(lt_bapi)
+        ).
+
+        factory(  )->main(
+          exporting
+            input           = lt_bapi
+          importing
+            result          = result
+        ).
+
+
     endcase.
 
   endmethod.
 
 
-  method _map_structure_2_structure.
+  method _map_struct_2_struct.
 
 
-    data(lt_in)  = value string_table( for row in cast cl_abap_structdescr( cl_abap_typedescr=>describe_by_data( is_in  ) )->components ( conv string( row-name ) ) ).
-    data(lt_out) = value string_table( for row in cast cl_abap_structdescr( cl_abap_typedescr=>describe_by_data( es_out ) )->components ( conv string( row-name ) ) ).
+    data(lt_in)  = value string_table( for row in cast cl_abap_structdescr( mo_typedescr_in )->components
+        ( conv string( row-name ) ) ).
 
+    data(lt_out) = value string_table( for row in cast cl_abap_structdescr( mo_typedescr_out )->components
+        ( conv string( row-name ) ) ).
 
     "Check every component of output....
     loop at lt_out into data(comp_out).
@@ -242,9 +301,7 @@ CLASS zls_hlp_cl_msg IMPLEMENTATION.
       loop at st_groups into data(lt_group).
 
         "if not, next
-        if not line_exists( lt_group[ table_line = comp_out ] ).
-          continue.
-        endif.
+        check line_exists( lt_group[ table_line = comp_out ] ).
 
         "if yes, is there an input fit which fits the same group?
         loop at lt_in into data(comp_in).
@@ -254,18 +311,11 @@ CLASS zls_hlp_cl_msg IMPLEMENTATION.
             continue.
           endif.
 
-          "if yes, write input to out output
+          "if yes, write input to output
           assign component comp_in  of structure is_in  to field-symbol(<in>).
           assign component comp_out of structure es_out to field-symbol(<out>).
 
-          "Formatierung
-          if line_exists( lt_group[ table_line = `ID` ] )
-          or line_exists( lt_group[ table_line = `NO` ] )
-          or line_exists( lt_group[ table_line = `TYPE` ] ).
-            <out> = to_upper( shift_left( shift_right( <in> ) ) ).
-          else.
-            <out> = <in>.
-          endif.
+          <out> =  to_upper( shift_left( shift_right( conv string( <in> ) ) ) ) .
 
           exit.
         endloop.
@@ -274,6 +324,60 @@ CLASS zls_hlp_cl_msg IMPLEMENTATION.
     endloop.
 
   endmethod.
-ENDCLASS.
 
+  method _map_obj_2_tab.
 
+    case type of value.
+
+      when type cx_root into data(lx_root).
+
+        while lx_root is bound.
+
+          data(ls_bapi) = value bapiret2(  ).
+
+          case type of lx_root.
+
+            when type if_t100_message into data(li_t100).
+
+              ls_bapi = factory( )->get( li_t100 )-s_bapi.
+
+              case type of li_t100.
+
+                when type if_t100_dyn_msg into data(li_t100_dyn).
+
+                  ls_bapi-type = li_t100_dyn->msgty.
+                  ls_bapi-message_v1 = li_t100_dyn->msgv1.
+                  ls_bapi-message_v2 = li_t100_dyn->msgv2.
+                  ls_bapi-message_v3 = li_t100_dyn->msgv3.
+                  ls_bapi-message_v4 = li_t100_dyn->msgv4.
+
+              endcase.
+
+            when type cx_root into lx_root.
+
+              ls_bapi = factory( )->get_by_text( lx_root->get_text( ) )-s_bapi.
+
+          endcase.
+          insert ls_bapi into table result.
+          lx_root = lx_root->previous.
+        endwhile.
+
+    endcase.
+
+  endmethod.
+
+  method get_by_text.
+
+    result = get_by_msg(
+         id     = '00'
+         no     = '398'
+         type   = type
+         v1     = conv string( val )
+         v2     = cond string( let l = strlen( val ) in when l >= 50  then val+50  else '' )
+         v3     = cond string( let l = strlen( val ) in when l >= 100 then val+100 else '' )
+         v4     = cond string( let l = strlen( val ) in when l >= 150 then val+150 else '' )
+     ).
+
+  endmethod.
+
+endclass.
