@@ -36,7 +36,8 @@ public section.
   data MS_BALHDR type BALHDR read-only .
   data MT_LOG type TY_T_LOG read-only .
 
-    class-data: begin of cs_default,
+    class-data:
+      begin of cs_default,
         object type string value 'ZKAL',
         subobject type string value '001',
         days_delete type i value 30,
@@ -76,7 +77,7 @@ public section.
       !IV_IDENT type BALPAR
       !I_ANY type ANY .
     "! <p class="shorttext synchronized" lang="de">get messages and info</p>
-  methods GET_MSG
+  methods get
     returning
       value(RESULT) type TY_S_RESULT_GET_MSG .
     "! <p class="shorttext synchronized" lang="de">save to bal database</p>
@@ -509,7 +510,7 @@ CLASS zls_cl_log IMPLEMENTATION.
     ls_tag-extnumber = ms_balhdr-extnumber.
 *    ls_tag-parname = 'TAG'.
 *    ls_tag-parvalue = 'TAG'.
-    ls_tag-tagdata = ls_tag-tagdata && SWITCH string( me->get_msg( )-type
+    ls_tag-tagdata = ls_tag-tagdata && SWITCH string( me->get( )-type
       WHEN 'E' THEN 'ERROR'
       WHEN 'S' THEN 'SUCCESS'  ).
 
@@ -537,7 +538,7 @@ CLASS zls_cl_log IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_msg.
+  METHOD get.
     TRY.
 
         result-type = COND #(

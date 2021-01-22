@@ -23,7 +23,6 @@ CLASS ltcl_unit_test_log IMPLEMENTATION.
 
     lo_log->db_save( ).
 
-
     MESSAGE e002(/scwm/rf_de) WITH '4711' INTO lv_msg.
     lo_log->add( sy ).
 
@@ -54,7 +53,7 @@ CLASS ltcl_unit_test_log IMPLEMENTATION.
     lo_log->db_save( ).
 
 
-    IF lo_log->get_msg( )-is_error = abap_false.
+    IF lo_log->get( )-is_error = abap_false.
 
       cl_aunit_assert=>fail(
         msg    = 'log handling error'    " Error Message
@@ -75,8 +74,8 @@ CLASS ltcl_unit_test_log IMPLEMENTATION.
 
     DATA(lo_new_log) = zls_cl_log=>factory_by_bal( lo_log->ms_balhdr-extnumber  ).
 
-    DATA(lt_db) = lo_new_log->get_msg( )-t_bapi.
-    DATA(lt_local) = lo_log->get_msg( )-t_bapi.
+    DATA(lt_db) = lo_new_log->get( )-t_bapi.
+    DATA(lt_local) = lo_log->get( )-t_bapi.
 
     IF lines( lt_db ) <> 4.
       cl_aunit_assert=>fail(
@@ -93,7 +92,7 @@ CLASS ltcl_unit_test_log IMPLEMENTATION.
     ENDIF.
 
 
-    IF  lo_new_log->get_msg( )-is_error = abap_false.
+    IF  lo_new_log->get( )-is_error = abap_false.
 
       cl_aunit_assert=>fail(
         msg    = 'log handling error'    " Error Message
@@ -112,20 +111,20 @@ CLASS ltcl_unit_test_log IMPLEMENTATION.
     MESSAGE e001(/scwm/rf_de) INTO DATA(lv_msg).
     lo_log->add( sy ).
 
-    IF lo_log->get_msg( )-type <> 'E'.
+    IF lo_log->get( )-type <> 'E'.
       cl_aunit_assert=>fail(
     msg    = 'get type: E not found'    " Error Message
    quit = if_aunit_constants=>no  ).
     ENDIF.
 
 
-    IF lo_log->get_msg( )-is_error = abap_false.
+    IF lo_log->get( )-is_error = abap_false.
       cl_aunit_assert=>fail(
       msg    = 'is error: not found'    " Error Message
      quit = if_aunit_constants=>no  ).
     ENDIF.
 
-    DATA(lt_bapi) = lo_log->get_msg( )-t_bapi.
+    DATA(lt_bapi) = lo_log->get( )-t_bapi.
 
     IF lt_bapi[ 1 ]-number <> '001'.
 
@@ -150,7 +149,7 @@ CLASS ltcl_unit_test_log IMPLEMENTATION.
     DATA(ls_sy) = sy.
 
     DATA(lo_log3) = NEW zls_cl_log( )->add( ls_sy ).
-    IF lo_log3->get_msg( )-is_error = abap_true.
+    IF lo_log3->get( )-is_error = abap_true.
 
       cl_aunit_assert=>fail(
   msg    = 'type not working'    " Error Message
@@ -158,7 +157,7 @@ CLASS ltcl_unit_test_log IMPLEMENTATION.
 
     ENDIF.
 
-    IF lo_log3->get_msg( )-type <> 'S'.
+    IF lo_log3->get( )-type <> 'S'.
 
       cl_aunit_assert=>fail(
   msg    = 'type not working'    " Error Message
@@ -224,7 +223,7 @@ CLASS ltcl_unit_test_log IMPLEMENTATION.
 
     ENDIF.
 
-    IF lines( lo_log->add( ls_sy )->get_msg( )-t_bapi ) <> 5.
+    IF lines( lo_log->add( ls_sy )->get( )-t_bapi ) <> 5.
 
       cl_aunit_assert=>fail(
     msg    = 'log handling error'    " Error Message

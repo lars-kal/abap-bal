@@ -45,7 +45,7 @@
     </SEOCOMPOTX>
     <SEOCOMPOTX>
      <CLSNAME>ZLS_CL_LOG</CLSNAME>
-     <CMPNAME>GET_MSG</CMPNAME>
+     <CMPNAME>GET</CMPNAME>
      <LANGU>E</LANGU>
      <DESCRIPT>get messages and info</DESCRIPT>
     </SEOCOMPOTX>
