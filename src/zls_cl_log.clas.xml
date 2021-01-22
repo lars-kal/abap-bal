@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_CLAS" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <VSEOCLASS>
+    <CLSNAME>ZLS_CL_LOG</CLSNAME>
+    <LANGU>E</LANGU>
+    <DESCRIPT>logging</DESCRIPT>
+    <STATE>1</STATE>
+    <CLSCCINCL>X</CLSCCINCL>
+    <FIXPT>X</FIXPT>
+    <UNICODE>X</UNICODE>
+    <WITH_UNIT_TESTS>X</WITH_UNIT_TESTS>
+   </VSEOCLASS>
+   <DESCRIPTIONS>
+    <SEOCOMPOTX>
+     <CLSNAME>ZLS_CL_LOG</CLSNAME>
+     <CMPNAME>ADD</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>sy/bapiret/bapiret2/exception</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CLSNAME>ZLS_CL_LOG</CLSNAME>
+     <CMPNAME>ADD_MSG</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>add message</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CLSNAME>ZLS_CL_LOG</CLSNAME>
+     <CMPNAME>ADD_TAG</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>add additional identifier</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CLSNAME>ZLS_CL_LOG</CLSNAME>
+     <CMPNAME>DB_SAVE</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>save to bal database</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CLSNAME>ZLS_CL_LOG</CLSNAME>
+     <CMPNAME>FACTORY_BY_BAL</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>create log with entries from bal database</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CLSNAME>ZLS_CL_LOG</CLSNAME>
+     <CMPNAME>GET_MSG</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>get messages and info</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CLSNAME>ZLS_CL_LOG</CLSNAME>
+     <CMPNAME>MT_TAG</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Anwendungs-Log: Tabelle mit Parametern zu Protokollmeldungen</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CLSNAME>ZLS_CL_LOG</CLSNAME>
+     <CMPNAME>_RFC_CALL_SAVE</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT> do not use!!! use method db_save instead</DESCRIPT>
+    </SEOCOMPOTX>
+   </DESCRIPTIONS>
+  </asx:values>
+ </asx:abap>
+</abapGit>
