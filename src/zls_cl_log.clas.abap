@@ -123,7 +123,178 @@ ENDCLASS.
 
 
 
-CLASS zls_cl_log IMPLEMENTATION.
+CLASS ZLS_CL_LOG IMPLEMENTATION.
+
+
+  METHOD bal_save.
+
+    DATA lt_log_header TYPE balhdr_t.
+
+    DATA(ls_filter) = VALUE bal_s_lfil(
+        object    = VALUE bal_r_obj( ( sign = 'I' option = 'EQ' low = ms_balhdr-object ) )
+        subobject = VALUE bal_r_sub( ( sign = 'I' option = 'EQ' low = ms_balhdr-subobject ) )
+        extnumber = VALUE bal_r_extn( ( sign = 'I' option = 'EQ' low =  ms_balhdr-extnumber ) )
+         ).
+
+    CALL FUNCTION 'BAL_DB_SEARCH'
+      EXPORTING
+        i_s_log_filter = ls_filter
+      IMPORTING
+        e_t_log_header = lt_log_header
+      EXCEPTIONS
+        error_message  = 1
+        OTHERS         = 2.
+    IF sy-subrc = 0.
+
+      ms_balhdr = lt_log_header[ 1 ]. "log_handle.
+
+      CALL FUNCTION 'BAL_DB_LOAD'
+        EXPORTING
+          i_t_log_handle         = VALUE bal_t_logh( ( ms_balhdr-log_handle ) )
+          i_do_not_load_messages = abap_true
+          i_lock_handling        = 1
+        EXCEPTIONS
+          error_message          = 1
+          OTHERS                 = 2.
+
+    ELSE.
+
+      CALL FUNCTION 'BAL_LOG_CREATE'
+        EXPORTING
+          i_s_log       = CORRESPONDING bal_s_log( ms_balhdr )
+        IMPORTING
+          e_log_handle  = ms_balhdr-log_handle
+        EXCEPTIONS
+          error_message = 1
+          OTHERS        = 2.
+
+    ENDIF.
+
+
+    LOOP AT mt_log INTO DATA(ls_log)
+        WHERE is_db_entry = abaP_false.
+
+      DATA(ls_bal) = VALUE bal_s_msg(  ).
+
+      NEW lcl_help_msg_mapper( )->main(
+        EXPORTING
+          input           = ls_log
+        IMPORTING
+          result          = ls_bal
+      ).
+      ls_bal-time_stmp = ls_log-tstmp.
+*      ls_bal-probclass = ms_cust-detlevel.
+
+*--Meldung in Log...
+      CALL FUNCTION 'BAL_LOG_MSG_ADD'
+        EXPORTING
+          i_log_handle     = ms_balhdr-log_handle
+          i_s_msg          = ls_bal
+        EXCEPTIONS
+          log_not_found    = 1
+          msg_inconsistent = 2
+          log_is_full      = 3
+          error_message    = 4
+          OTHERS           = 5.
+      IF sy-subrc <> 0.
+      ENDIF.
+    ENDLOOP.
+
+    CALL FUNCTION 'BAL_DB_SAVE'
+      EXPORTING
+        i_in_update_task = ''
+        i_save_all       = ''
+        i_t_log_handle   = VALUE bal_t_logh( ( ms_balhdr-log_handle ) )
+      EXCEPTIONS
+        log_not_found    = 1
+        save_not_allowed = 2
+        numbering_error  = 3
+        error_message    = 4
+        OTHERS           = 5.
+
+  ENDMETHOD.
+
+
+  METHOD db_save.
+    TRY.
+        result = me.
+
+        "check customizing -> database log active?
+*        CHECK ms_cust-active = abap_true.
+        CHECK line_exists( mt_log[ is_db_entry = abap_false ] ).
+
+        "save stack for search functions
+        mt_stack = lcl_help=>get_callstack( 1  ).
+        SORT mt_stack BY mainprogram blockname.
+        DELETE ADJACENT DUPLICATES FROM mt_stack COMPARING mainprogram blockname.
+
+        DATA(lv_log_as_xml) = lcl_help=>xml_obj_2_string( me ).
+        DATA(lv_task)       = CONV string( lcl_help=>get_time( )-tstmp ).
+        DATA(lv_trfcqnam)   = CONV trfcqnam( 'ZRG_' && ms_balhdr-subobject ).
+
+        CALL FUNCTION 'ZLS_FM_01' "STARTING NEW TASK lv_task
+          DESTINATION 'NONE'
+          EXPORTING
+            ij_objekt   = lv_log_as_xml
+            iv_trfcqnam = lv_trfcqnam.
+
+        "mark messages saved to database
+        LOOP AT mt_log ASSIGNING FIELD-SYMBOL(<ls_log>).
+          <ls_log>-is_db_entry = abap_true.
+        ENDLOOP.
+
+      CATCH cx_root.
+        "this log will not interrupt you
+    ENDTRY.
+  ENDMETHOD.
+
+
+  METHOD factory_by_bal.
+
+    result = NEW #( ).
+
+    result->init(
+      iv_subobject = iv_subobject
+      iv_object    = iv_object
+      iv_extnumber = iv_extnumber
+      iv_lognumber = iv_lognumber
+    ).
+
+    result->bal_load( ).
+
+  ENDMETHOD.
+
+
+  METHOD init.
+    TRY.
+
+        CLEAR mt_log.
+        CLEAR ms_balhdr.
+*        CLEAR ms_cust.
+
+        DATA(ls_time) = lcl_help=>get_time( ).
+        ms_balhdr-aldate = ls_time-date.
+        ms_balhdr-altime = ls_time-time.
+
+        ms_balhdr-aluser    = sy-uname.
+        ms_balhdr-altcode   = sy-tcode.
+        ms_balhdr-alprog    = sy-cprog.
+
+        ms_balhdr-object    = iv_object.
+        ms_balhdr-subobject = iv_subobject.
+        ms_balhdr-extnumber = iv_extnumber.
+
+        ms_balhdr-lognumber = iv_lognumber.
+
+        ms_balhdr-aldate_del = sy-datlo + cs_default-days_delete.
+*         COND #(
+*            WHEN ms_cust-dele_duration IS NOT INITIAL THEN ms_cust-dele_duration
+*            ELSE 30 ).
+
+      CATCH cx_root.
+    ENDTRY.
+  ENDMETHOD.
+
 
   METHOD add.
     TRY.
@@ -148,6 +319,56 @@ CLASS zls_cl_log IMPLEMENTATION.
 
           INSERT ls_log INTO TABLE mt_log.
         ENDLOOP.
+
+      CATCH cx_root.
+        "this log will not interrupt you
+    ENDTRY.
+  ENDMETHOD.
+
+
+  METHOD tag_cleanup.
+    TRY.
+
+        DATA lt_del TYPE RANGE OF balhdr-extnumber.
+
+        "all entries of /zrg/ with no reference to balhdr
+        SELECT FROM
+           zls_t_log as log
+        LEFT OUTER JOIN
+           balhdr ON
+            balhdr~extnumber = log~extnumber
+        FIELDS
+          'I' AS sign,
+          'EQ' AS option,
+          log~extnumber AS low
+        WHERE
+          log~extnumber IS NOT INITIAL AND
+          balhdr~extnumber IS NULL
+        INTO TABLE @lt_del.
+
+        IF lt_del IS NOT INITIAL.
+          DELETE FROM zls_t_log WHERE extnumber IN lt_del.
+        ENDIF.
+
+      CATCH cx_root.
+    ENDTRY.
+  ENDMETHOD.
+
+
+  METHOD add_msg.
+    TRY.
+        result = me.
+
+        add( VALUE bapiret2(
+           type       = CONV #( iv_msgty )
+           id         = CONV #( iv_msgid )
+           number     = CONV #( iv_msgno )
+           message_v1 = CONV #( iv_msgv1 )
+           message_v2 = CONV #( iv_msgv2 )
+           message_v3 = CONV #( iv_msgv3 )
+           message_v4 = CONV #( iv_msgv4 )
+          ) ).
+
 
       CATCH cx_root.
         "this log will not interrupt you
@@ -200,26 +421,6 @@ CLASS zls_cl_log IMPLEMENTATION.
     ENDTRY.
   ENDMETHOD.
 
-
-  METHOD add_msg.
-    TRY.
-        result = me.
-
-        add( VALUE bapiret2(
-           type       = CONV #( iv_msgty )
-           id         = CONV #( iv_msgid )
-           number     = CONV #( iv_msgno )
-           message_v1 = CONV #( iv_msgv1 )
-           message_v2 = CONV #( iv_msgv2 )
-           message_v3 = CONV #( iv_msgv3 )
-           message_v4 = CONV #( iv_msgv4 )
-          ) ).
-
-
-      CATCH cx_root.
-        "this log will not interrupt you
-    ENDTRY.
-  ENDMETHOD.
 
   METHOD bal_load.
 
@@ -315,95 +516,6 @@ CLASS zls_cl_log IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD bal_save.
-
-    DATA lt_log_header TYPE balhdr_t.
-
-    DATA(ls_filter) = VALUE bal_s_lfil(
-        object    = VALUE bal_r_obj( ( sign = 'I' option = 'EQ' low = ms_balhdr-object ) )
-        subobject = VALUE bal_r_sub( ( sign = 'I' option = 'EQ' low = ms_balhdr-subobject ) )
-        extnumber = VALUE bal_r_extn( ( sign = 'I' option = 'EQ' low =  ms_balhdr-extnumber ) )
-         ).
-
-    CALL FUNCTION 'BAL_DB_SEARCH'
-      EXPORTING
-        i_s_log_filter = ls_filter
-      IMPORTING
-        e_t_log_header = lt_log_header
-      EXCEPTIONS
-        error_message  = 1
-        OTHERS         = 2.
-    IF sy-subrc = 0.
-
-      ms_balhdr = lt_log_header[ 1 ]. "log_handle.
-
-      CALL FUNCTION 'BAL_DB_LOAD'
-        EXPORTING
-          i_t_log_handle         = VALUE bal_t_logh( ( ms_balhdr-log_handle ) )
-          i_do_not_load_messages = abap_true
-          i_lock_handling        = 1
-        EXCEPTIONS
-          error_message          = 1
-          OTHERS                 = 2.
-
-    ELSE.
-
-      CALL FUNCTION 'BAL_LOG_CREATE'
-        EXPORTING
-          i_s_log       = CORRESPONDING bal_s_log( ms_balhdr )
-        IMPORTING
-          e_log_handle  = ms_balhdr-log_handle
-        EXCEPTIONS
-          error_message = 1
-          OTHERS        = 2.
-
-    ENDIF.
-
-
-    LOOP AT mt_log INTO DATA(ls_log)
-        WHERE is_db_entry = abaP_false.
-
-      DATA(ls_bal) = VALUE bal_s_msg(  ).
-
-      NEW lcl_help_msg_mapper( )->main(
-        EXPORTING
-          input           = ls_log
-        IMPORTING
-          result          = ls_bal
-      ).
-      ls_bal-time_stmp = ls_log-tstmp.
-*      ls_bal-probclass = ms_cust-detlevel.
-
-*--Meldung in Log...
-      CALL FUNCTION 'BAL_LOG_MSG_ADD'
-        EXPORTING
-          i_log_handle     = ms_balhdr-log_handle
-          i_s_msg          = ls_bal
-        EXCEPTIONS
-          log_not_found    = 1
-          msg_inconsistent = 2
-          log_is_full      = 3
-          error_message    = 4
-          OTHERS           = 5.
-      IF sy-subrc <> 0.
-      ENDIF.
-    ENDLOOP.
-
-    CALL FUNCTION 'BAL_DB_SAVE'
-      EXPORTING
-        i_in_update_task = ''
-        i_save_all       = ''
-        i_t_log_handle   = VALUE bal_t_logh( ( ms_balhdr-log_handle ) )
-      EXCEPTIONS
-        log_not_found    = 1
-        save_not_allowed = 2
-        numbering_error  = 3
-        error_message    = 4
-        OTHERS           = 5.
-
-  ENDMETHOD.
-
-
   METHOD constructor.
     TRY.
 
@@ -418,61 +530,21 @@ CLASS zls_cl_log IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD tag_cleanup.
+  METHOD get.
     TRY.
 
-        DATA lt_del TYPE RANGE OF balhdr-extnumber.
+        result-type = COND #(
+            WHEN line_exists( mt_log[ type = 'A' ] ) THEN 'A'
+            WHEN line_exists( mt_log[ type = 'X' ] ) THEN 'X'
+            WHEN line_exists( mt_log[ type = 'E' ] ) THEN 'E'
+            WHEN line_exists( mt_log[ type = 'W' ] ) THEN 'W'
+            WHEN line_exists( mt_log[ type = 'S' ] ) THEN 'S'
+             ).
 
-        "all entries of /zrg/ with no reference to balhdr
-        SELECT FROM
-           zls_t_log as log
-        LEFT OUTER JOIN
-           balhdr ON
-            balhdr~extnumber = log~extnumber
-        FIELDS
-          'I' AS sign,
-          'EQ' AS option,
-          log~extnumber AS low
-        WHERE
-          log~extnumber IS NOT INITIAL AND
-          balhdr~extnumber IS NULL
-        INTO TABLE @lt_del.
+        result-is_error = COND #( WHEN result-type CA 'EAX' THEN abap_true ).
 
-        IF lt_del IS NOT INITIAL.
-          DELETE FROM zls_t_log WHERE extnumber IN lt_del.
-        ENDIF.
-
-      CATCH cx_root.
-    ENDTRY.
-  ENDMETHOD.
-
-
-  METHOD db_save.
-    TRY.
-        result = me.
-
-        "check customizing -> database log active?
-*        CHECK ms_cust-active = abap_true.
-        CHECK line_exists( mt_log[ is_db_entry = abap_false ] ).
-
-        "save stack for search functions
-        mt_stack = lcl_help=>get_callstack( 1  ).
-        SORT mt_stack BY mainprogram blockname.
-        DELETE ADJACENT DUPLICATES FROM mt_stack COMPARING mainprogram blockname.
-
-        DATA(lv_log_as_xml) = lcl_help=>xml_obj_2_string( me ).
-        DATA(lv_task)       = CONV string( lcl_help=>get_time( )-tstmp ).
-        DATA(lv_trfcqnam)   = CONV trfcqnam( 'ZRG_' && ms_balhdr-subobject ).
-
-        CALL FUNCTION 'ZLS_FM_01' "STARTING NEW TASK lv_task
-          DESTINATION 'NONE'
-          EXPORTING
-            ij_objekt   = lv_log_as_xml
-            iv_trfcqnam = lv_trfcqnam.
-
-        "mark messages saved to database
-        LOOP AT mt_log ASSIGNING FIELD-SYMBOL(<ls_log>).
-          <ls_log>-is_db_entry = abap_true.
+        LOOP AT mt_log INTO DATA(ls_log).
+          INSERT lcl_help=>msg( ls_log )-s_bapi INTO TABLE result-t_bapi.
         ENDLOOP.
 
       CATCH cx_root.
@@ -519,76 +591,6 @@ CLASS zls_cl_log IMPLEMENTATION.
     DELETE FROM zls_t_log WHERE extnumber = ms_balhdr-extnumber.
     MODIFY zls_t_log FROM TABLE lt_t003.
 
-  ENDMETHOD.
-
-
-  METHOD factory_by_bal.
-
-    result = NEW #( ).
-
-    result->init(
-      iv_subobject = iv_subobject
-      iv_object    = iv_object
-      iv_extnumber = iv_extnumber
-      iv_lognumber = iv_lognumber
-    ).
-
-    result->bal_load( ).
-
-  ENDMETHOD.
-
-
-  METHOD get.
-    TRY.
-
-        result-type = COND #(
-            WHEN line_exists( mt_log[ type = 'A' ] ) THEN 'A'
-            WHEN line_exists( mt_log[ type = 'X' ] ) THEN 'X'
-            WHEN line_exists( mt_log[ type = 'E' ] ) THEN 'E'
-            WHEN line_exists( mt_log[ type = 'W' ] ) THEN 'W'
-            WHEN line_exists( mt_log[ type = 'S' ] ) THEN 'S'
-             ).
-
-        result-is_error = COND #( WHEN result-type CA 'EAX' THEN abap_true ).
-
-        LOOP AT mt_log INTO DATA(ls_log).
-          INSERT lcl_help=>msg( ls_log )-s_bapi INTO TABLE result-t_bapi.
-        ENDLOOP.
-
-      CATCH cx_root.
-        "this log will not interrupt you
-    ENDTRY.
-  ENDMETHOD.
-
-
-  METHOD init.
-    TRY.
-
-        CLEAR mt_log.
-        CLEAR ms_balhdr.
-*        CLEAR ms_cust.
-
-        DATA(ls_time) = lcl_help=>get_time( ).
-        ms_balhdr-aldate = ls_time-date.
-        ms_balhdr-altime = ls_time-time.
-
-        ms_balhdr-aluser    = sy-uname.
-        ms_balhdr-altcode   = sy-tcode.
-        ms_balhdr-alprog    = sy-cprog.
-
-        ms_balhdr-object    = iv_object.
-        ms_balhdr-subobject = iv_subobject.
-        ms_balhdr-extnumber = iv_extnumber.
-
-        ms_balhdr-lognumber = iv_lognumber.
-
-        ms_balhdr-aldate_del = sy-datlo + cs_default-days_delete.
-*         COND #(
-*            WHEN ms_cust-dele_duration IS NOT INITIAL THEN ms_cust-dele_duration
-*            ELSE 30 ).
-
-      CATCH cx_root.
-    ENDTRY.
   ENDMETHOD.
 
 
