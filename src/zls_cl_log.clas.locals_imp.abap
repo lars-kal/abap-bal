@@ -5,7 +5,7 @@ CLASS lcl_help_msg_mapper DEFINITION.
 
     TYPES:
       BEGIN OF ty_s_result_get,
-        message      TYPE string,
+        message  TYPE string,
         is_error TYPE abap_bool,
         type     TYPE abap_bool,
         t_bapi   TYPE bapirettab,
@@ -33,7 +33,7 @@ CLASS lcl_help_msg_mapper DEFINITION.
 
     METHODS get_by_text
       IMPORTING
-        val           TYPE any
+        VALUE(val)    TYPE any
         type          TYPE any OPTIONAL
         v1            TYPE any OPTIONAL
         v2            TYPE any OPTIONAL
@@ -126,18 +126,23 @@ CLASS lcl_help_msg_mapper IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    IF type IS NOT INITIAL.
-      LOOP AT result-t_bapi REFERENCE INTO DATA(lr_bapi).
+
+    LOOP AT result-t_bapi REFERENCE INTO DATA(lr_bapi).
+      IF type IS NOT INITIAL.
         lr_bapi->type = type.
-      ENDLOOP.
-    ENDIF.
+      ENDIF.
+
+      MESSAGE ID lr_bapi->id TYPE 'I' NUMBER lr_bapi->number
+        WITH lr_bapi->message_v1 lr_bapi->message_v2 lr_bapi->message_v3 lr_bapi->message_v4
+        INTO lr_bapi->message.
+
+      CLEAR: sy-msgty,sy-msgno, sy-msgid, sy-msgv1, sy-msgv2, sy-msgv3, sy-msgv4.
+
+    ENDLOOP.
+
 
     result-s_bapi = result-t_bapi[ 1 ].
-
-    MESSAGE ID result-s_bapi-id TYPE 'I' NUMBER result-s_bapi-number
-    WITH result-s_bapi-message_v1 result-s_bapi-message_v2 result-s_bapi-message_v3 result-s_bapi-message_v4
-    INTO result-message.
-    CLEAR: sy-msgty,sy-msgno, sy-msgid, sy-msgv1, sy-msgv2, sy-msgv3, sy-msgv4.
+    result-message = result-s_bapi-message.
 
     result-type = COND #(
         WHEN line_exists( result-t_bapi[ type = 'E' ] ) THEN 'E'
@@ -177,13 +182,29 @@ CLASS lcl_help_msg_mapper IMPLEMENTATION.
     mo_typedescr_out = cl_abap_typedescr=>describe_by_data( result ).
 
 
-    """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-    " structure to any
-
     FIELD-SYMBOLS <tab_in>  TYPE STANDARD TABLE.
     FIELD-SYMBOLS <tab_out> TYPE STANDARD TABLE.
 
     CASE mo_typedescr_in->kind.
+
+        """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+        " element to any
+
+      WHEN cl_abap_typedescr=>kind_elem.
+        DATA(lv_string) = CONV string( input ).
+        NEW lcl_help_msg_mapper( )->main(
+         EXPORTING
+             input  = VALUE bapiret2(
+             id = '00'
+             number = '398'
+             message_v1 = input
+             message_v2 = COND #( WHEN strlen( input ) > 50  THEN input+50 )
+             message_v3 = COND #( WHEN strlen( input ) > 100 THEN input+100 )
+             message_v4 = COND #( WHEN strlen( input ) > 150 THEN input+150 )
+             )
+         IMPORTING
+           result = result
+       ).
 
         """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
         " structure to any
@@ -313,8 +334,8 @@ CLASS lcl_help_msg_mapper IMPLEMENTATION.
           ASSIGN COMPONENT comp_in  OF STRUCTURE is_in  TO FIELD-SYMBOL(<in>).
           ASSIGN COMPONENT comp_out OF STRUCTURE es_out TO FIELD-SYMBOL(<out>).
 
-          <out> =  to_upper( shift_left( shift_right( CONV string( <in> ) ) ) ) .
-
+*          <out> =  to_upper( shift_left( shift_right( CONV string( <in> ) ) ) ) .
+          <out> = CONV string( <in> ).
           EXIT.
         ENDLOOP.
         EXIT.
@@ -326,6 +347,15 @@ CLASS lcl_help_msg_mapper IMPLEMENTATION.
   METHOD _map_obj_2_tab.
 
     CASE TYPE OF value.
+
+      WHEN TYPE zls_cx_log INTO DATA(lx_bal).
+
+        factory( )->main(
+          EXPORTING
+            input           = lx_bal->mo_bal
+          IMPORTING
+            result          = result
+        ).
 
       WHEN TYPE cx_root INTO DATA(lx_root).
 
@@ -357,11 +387,12 @@ CLASS lcl_help_msg_mapper IMPLEMENTATION.
               ls_bapi = factory( )->get_by_text( lx_root->get_text( ) )-s_bapi.
 
           ENDCASE.
+          ls_bapi-type = 'E'.
           INSERT ls_bapi INTO TABLE result.
           lx_root = lx_root->previous.
         ENDWHILE.
 
-    when type zls_cl_log INTO DATA(lo_log).
+      WHEN TYPE zls_cl_log INTO DATA(lo_log).
 
         factory( )->main(
           EXPORTING
@@ -370,11 +401,40 @@ CLASS lcl_help_msg_mapper IMPLEMENTATION.
             result          = result
         ).
 
+
     ENDCASE.
 
   ENDMETHOD.
 
   METHOD get_by_text.
+
+    IF v1 IS NOT INITIAL.
+      REPLACE '&1' IN val WITH v1.
+      IF sy-subrc <> 0.
+        REPLACE '&' IN val WITH v1.
+      ENDIF.
+    ENDIF.
+
+    IF v2 IS NOT INITIAL.
+      REPLACE '&2' IN val WITH v2.
+      IF sy-subrc <> 0.
+        REPLACE '&' IN val WITH v2.
+      ENDIF.
+    ENDIF.
+
+    IF v3 IS NOT INITIAL.
+      REPLACE '&3' IN val WITH v3.
+      IF sy-subrc <> 0.
+        REPLACE '&' IN val WITH v3.
+      ENDIF.
+    ENDIF.
+
+    IF v4 IS NOT INITIAL.
+      REPLACE '&4' IN val WITH v4.
+      IF sy-subrc <> 0.
+        REPLACE '&' IN val WITH v4.
+      ENDIF.
+    ENDIF.
 
     result = get_by_msg(
          id     = '00'
@@ -394,19 +454,19 @@ CLASS lcl_help DEFINITION.
 
   PUBLIC SECTION.
 
-    TYPES: BEGIN OF ty_S_result_time,
+    TYPES: BEGIN OF ty_s_result_time,
              date  TYPE d,
              time  TYPE t,
              tstmp TYPE timestampl,
-           END OF ty_S_result_time.
+           END OF ty_s_result_time.
 
-    TYPES ty_S_result_msg TYPE lcl_help_msg_mapper=>ty_s_result_get.
+    TYPES ty_s_result_msg TYPE lcl_help_msg_mapper=>ty_s_result_get.
 
-    CLASS-METHODS msg
-      IMPORTING
-        val           TYPE any
-      RETURNING
-        VALUE(result) TYPE ty_s_result_msg.
+*    CLASS-METHODS msg
+*      IMPORTING
+*        val           TYPE any
+*      RETURNING
+*        VALUE(result) TYPE ty_s_result_msg.
 
     CLASS-METHODS xml_obj_2_string
       IMPORTING
@@ -430,7 +490,7 @@ CLASS lcl_help DEFINITION.
       IMPORTING
         iv_tmstp      TYPE timestampl OPTIONAL
       RETURNING
-        VALUE(result) TYPE ty_S_result_time.
+        VALUE(result) TYPE ty_s_result_time.
 
     CLASS-METHODS get_guid16
       RETURNING
@@ -490,11 +550,11 @@ CLASS lcl_help IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD msg.
-
-    result = NEW lcl_help_msg_mapper( )->get( val ).
-
-  ENDMETHOD.
+*  METHOD msg.
+*
+*    result = NEW lcl_help_msg_mapper( )->get( val ).
+*
+*  ENDMETHOD.
 
   METHOD get_guid16.
     TRY.

@@ -1,15 +1,16 @@
-report zls_re_log_001.
+REPORT zls_re_log_001.
+
 
 
 CLASS lcl_app DEFINITION DEFERRED.
-CLASS lcl_main_alv_ida DEFINITION DEFERRED.
-CLASS lcl_popup_salv_table DEFINITION DEFERRED.
+CLASS lcl_alv_ida DEFINITION DEFERRED.
+CLASS lcl_popup DEFINITION DEFERRED.
 CLASS lcl_selscreen DEFINITION DEFERRED.
 *DATA go_app TYPE REF TO lcl_app.
 
 *parameters pa_table type string.
 
-CLASS hlp DEFINITION INHERITING FROM zcl_utility_abap_2011.
+CLASS hlp DEFINITION INHERITING FROM zcl_utility_abap_2102.
 ENDCLASS.
 
 CLASS lcl_app DEFINITION.
@@ -18,8 +19,8 @@ CLASS lcl_app DEFINITION.
 
     CLASS-DATA so_app TYPE REF TO lcl_app READ-ONLY.
 
-    DATA mo_alv_main TYPE REF TO lcl_main_alv_ida.
-    DATA mo_alv_popup TYPE REF TO lcl_popup_salv_table.
+    DATA mo_alv_main TYPE REF TO lcl_alv_ida.
+    DATA mo_alv_popup TYPE REF TO lcl_popup.
     DATA mo_selscreen TYPE REF TO lcl_selscreen.
     METHODS main.
 
@@ -34,7 +35,7 @@ CLASS lcl_post DEFINITION.
 ENDCLASS.
 
 
-CLASS lcl_salv_table DEFINITION.
+CLASS lcl_alv_salv DEFINITION.
 
   PUBLIC SECTION.
 
@@ -112,7 +113,7 @@ ENDCLASS.
 
 
 
-CLASS lcl_salv_table IMPLEMENTATION.
+CLASS lcl_alv_salv IMPLEMENTATION.
 
   METHOD set_table.
 
@@ -1676,7 +1677,7 @@ ENDCLASS.
 
 
 
-CLASS lcl_popup_salv_table DEFINITION.
+CLASS lcl_popup DEFINITION.
 
   PUBLIC SECTION.
     DATA mo_app TYPE REF TO lcl_app.
@@ -1700,7 +1701,7 @@ CLASS lcl_popup_salv_table DEFINITION.
 
 ENDCLASS.
 
-CLASS lcl_main_alv_ida DEFINITION.
+CLASS lcl_alv_ida DEFINITION.
 
   PUBLIC SECTION.
 
@@ -1708,10 +1709,10 @@ CLASS lcl_main_alv_ida DEFINITION.
 
     INTERFACES: if_salv_ida_calc_field_handler.
 
-    CONSTANTS: co_table_name TYPE dbtabl VALUE 'ZLS_CDS_LOG_01'.
+    CONSTANTS: co_table_name TYPE dbtabl VALUE 'BALHDR'.
 
 
-    TYPES ty_S_out TYPE zls_cds_log_01.
+    TYPES ty_S_out TYPE balhdr. "zcl_stc_utility_bal_2102=>ty_s_log.
 
     METHODS: on_cell_action FOR EVENT cell_action OF if_salv_gui_field_display_opt
       IMPORTING
@@ -1751,27 +1752,24 @@ ENDCLASS.
 
 
 
-CLASS lcl_popup_salv_table IMPLEMENTATION.
+CLASS lcl_popup IMPLEMENTATION.
 
   METHOD display.
 
 
-    DATA(ls_row) = CONV lcl_main_alv_ida=>ty_S_out( is_row ).
+    DATA(ls_row) = CONV lcl_alv_ida=>ty_S_out( is_row ).
 
     IF mo_dock IS INITIAL.
       init( ).
 
     ENDIF.
 
-    mt_out = CORRESPONDING #( zls_cl_log=>factory_by_bal(
-                                iv_object    = ls_row-object
-                                iv_subobject = ls_row-subobject
-*                                iv_extnumber =
-                                iv_lognumber = ls_row-lognumber
-                              )->mt_log ).
+    mt_out = CORRESPONDING #( zls_cl_log=>factory_by_bal( ls_row-lognumber
+                              )->mt_log
+                               ).
 
     mo_object->get_display_settings( )->set_list_header( value = CONV #(
-     `Log ` && shift_left( val = ls_row-lognumber sub = '0' ) && ` | tcode ` && ls_row-tcode && ` | user ` && ls_row-aluser && ` (#`
+     `Log ` && shift_left( val = ls_row-lognumber sub = '0' ) && ` | tcode ` && ls_row-altcode && ` | user ` && ls_row-aluser && ` (#`
        && shift_right( CONV string( lines( mt_out ) )  ) && `)` ) ).
 
     mo_dock->set_visible( abap_true ).
@@ -1872,15 +1870,15 @@ ENDCLASS.
 
 
 
-CLASS lcl_main_alv_ida IMPLEMENTATION.
+CLASS lcl_alv_ida IMPLEMENTATION.
 
   METHOD init.
 
 
 *    if pa_table is INITIAL.
-    mo_object = cl_salv_gui_table_ida=>create_for_cds_view( iv_cds_view_name = co_table_name ).
+*    mo_object = cl_salv_gui_table_ida=>create_for_cds_view( iv_cds_view_name = co_table_name ).
 *    else.
-*     mo_object = cl_salv_gui_table_ida=>create( iv_table_name = conv #(  pa_table ) ).
+     mo_object = cl_salv_gui_table_ida=>create( iv_table_name = conv #(  co_table_name ) ).
 
 
 
@@ -1999,9 +1997,9 @@ CLASS lcl_main_alv_ida IMPLEMENTATION.
 *      o_salv_ida->field_catalog( )->enable_text_search( 'PARNAME' ).
     mo_object->field_catalog( )->enable_text_search( 'OBJECT' ).
     mo_object->field_catalog( )->enable_text_search( 'SUBOBJECT' ).
-    mo_object->field_catalog( )->enable_text_search( 'TAGDATA' ).
-    mo_object->field_catalog( )->enable_text_search( 'TAGMSG' ).
-    mo_object->field_catalog( )->enable_text_search( 'TAGSTACK' ).
+*    mo_object->field_catalog( )->enable_text_search( 'TAGDATA' ).
+*    mo_object->field_catalog( )->enable_text_search( 'TAGMSG' ).
+*    mo_object->field_catalog( )->enable_text_search( 'TAGSTACK' ).
     mo_object->standard_functions( )->set_text_search_active( abap_true ).
 
 *        o_salv_ida->standard_functions( )->set_text_search_active( iv_active =  ).
@@ -2148,11 +2146,11 @@ CLASS lcl_main_alv_ida IMPLEMENTATION.
   METHOD on_double_click.
     TRY.
 *    DATA: lv_row TYPE sflight.
-        DATA(ls_row) = VALUE zls_cds_log_01( ).
+        DATA(ls_row) = VALUE ty_s_out( ).
 * Daten der geklickten Zeile holen
         eo_row_data->get_row_data( EXPORTING
                                      iv_request_type = if_salv_gui_selection_ida=>cs_request_type-all_fields
-                                    its_requested_fields = VALUE #( ( CONV #( 'EXTNUMBER' ) ) )
+*                                    its_requested_fields = VALUE #( ( CONV #( 'LOGNUMBER' ) ) )
                                    IMPORTING
                                      es_row =  ls_row ).
 

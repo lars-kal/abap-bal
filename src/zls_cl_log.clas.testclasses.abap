@@ -4,10 +4,13 @@ CLASS ltcl_unit_test_log DEFINITION FINAL FOR TESTING
   RISK LEVEL HARMLESS.
 
   PRIVATE SECTION.
+    DATA: mo_bal TYPE zls_cl_log=>ty_o_me.
     METHODS:
       test_bal FOR TESTING RAISING cx_static_check,
       test_local FOR TESTING RAISING cx_static_check,
-      test_local_chain FOR TESTING RAISING cx_static_check.
+      test_exception FOR TESTING RAISING cx_static_check,
+      test_local_chain FOR TESTING RAISING cx_static_check,
+      setup.
 ENDCLASS.
 
 
@@ -15,8 +18,10 @@ CLASS ltcl_unit_test_log IMPLEMENTATION.
 
   METHOD test_bal.
 
+*    data lo_log type ref to zls_cl_log.
 
-    DATA(lo_log) = NEW zls_cl_log( ).
+    DATA(lo_log) = mo_bal->factory( ).
+    "NEW zls_cl_log( ).
 
     MESSAGE e001(/scwm/rf_de) INTO DATA(lv_msg).
     lo_log->add( sy ).
@@ -28,16 +33,16 @@ CLASS ltcl_unit_test_log IMPLEMENTATION.
 
     lo_log->add_tag(
       EXPORTING
-        iv_ident = 'TANUM' " Anwendungs-Log: Parameter
-        i_any    = '4711'  ).
+        name = 'TANUM' " Anwendungs-Log: Parameter
+        val    = '4711'  ).
 
     lo_log->db_save( ).
 
 
     lo_log->add_msg(
-        iv_msgty     = 'E'     " Nachrichtentyp
-        iv_msgid     = '/SCWM/RF_DE'
-        iv_msgno     = '003'   ).
+        ty     = 'E'     " Nachrichtentyp
+        id     = '/SCWM/RF_DE'
+        no     = '003'   ).
 
     lo_log->db_save( ).
 
@@ -47,8 +52,8 @@ CLASS ltcl_unit_test_log IMPLEMENTATION.
 
     lo_log->add_tag(
       EXPORTING
-        iv_ident = 'TANUM' " Anwendungs-Log: Parameter
-        i_any    = '4812'  ).
+        name = 'TANUM' " Anwendungs-Log: Parameter
+        val  = '4812'  ).
 
     lo_log->db_save( ).
 
@@ -61,18 +66,18 @@ CLASS ltcl_unit_test_log IMPLEMENTATION.
 
     ENDIF.
 
-    SELECT * UP TO 10 ROWS FROM /scwm/huhdr  INTO TABLE @DATA(lt_hu).
+*    SELECT * UP TO 10 ROWS FROM /scwm/huhdr  INTO TABLE @DATA(lt_hu).
+*
+*    lo_log->add_tag(
+*      EXPORTING
+*        name = 'HUIDENT' " Anwendungs-Log: Parameter
+*        val    = lt_hu  ).
 
-    lo_log->add_tag(
-      EXPORTING
-        iv_ident = 'HUIDENT' " Anwendungs-Log: Parameter
-        i_any    = lt_hu  ).
-
-    lo_log->db_save( ).
+*    lo_log->db_save( ).
 
     WAIT UP TO '0.5' SECONDS.
 
-    DATA(lo_new_log) = zls_cl_log=>factory_by_bal( lo_log->ms_balhdr-extnumber  ).
+    DATA(lo_new_log) = mo_bal->factory_by_bal( lo_log->get_id( )  ).
 
     DATA(lt_db) = lo_new_log->get( )-t_bapi.
     DATA(lt_local) = lo_log->get( )-t_bapi.
@@ -106,7 +111,7 @@ CLASS ltcl_unit_test_log IMPLEMENTATION.
 
   METHOD test_local.
 
-    DATA(lo_log) = NEW zls_cl_log( ).
+    DATA(lo_log) = mo_bal->factory( ).
 
     MESSAGE e001(/scwm/rf_de) INTO DATA(lv_msg).
     lo_log->add( sy ).
@@ -135,7 +140,7 @@ CLASS ltcl_unit_test_log IMPLEMENTATION.
     ENDIF.
 
 
-    DATA(lo_log_new) = NEW zls_cl_log( )->add( lo_log ).
+    DATA(lo_log_new) = lo_log->factory( )->add( lo_log ).
 
     IF lines( lo_log_new->mt_log ) <> lines( lo_log->mt_log ).
 
@@ -148,7 +153,7 @@ CLASS ltcl_unit_test_log IMPLEMENTATION.
     MESSAGE s001(/scwm/rf_de) INTO lv_msg.
     DATA(ls_sy) = sy.
 
-    DATA(lo_log3) = NEW zls_cl_log( )->add( ls_sy ).
+    DATA(lo_log3) = lo_log->factory( )->add( ls_sy ).
     IF lo_log3->get( )-is_error = abap_true.
 
       cl_aunit_assert=>fail(
@@ -175,19 +180,55 @@ CLASS ltcl_unit_test_log IMPLEMENTATION.
                  message_v4 = 'V1'
      ) INTO TABLE lt_messages.
 
-    data(lo_bal) = new zls_cl_log( ).
+    DATA(lo_bal) = lo_log3->factory( ).
 
     lo_bal->add( lt_messages ).
 
-    if lo_bal->mt_log[ 1 ]-v1 <> 'V1'.
+    IF lo_bal->mt_log[ 1 ]-v1 <> 'V1'.
 
-     cl_aunit_assert=>fail(
-  msg    = 'type not working'    " Error Message
- quit = if_aunit_constants=>no  ).
+      cl_aunit_assert=>fail(
+         msg  = 'type not working'    " Error Message
+         quit = if_aunit_constants=>no  ).
 
 
+    ENDIF.
+
+    TRY.
+
+        RAISE EXCEPTION TYPE cx_aab_iterator.
+
+      CATCH cx_root INTO DATA(lx).
+        IF lo_bal->factory( )->add( lx )->get( )-is_error = abap_false.
+          cl_aunit_assert=>fail(
+            msg    = 'no type error after exception'    " Error Message
+            quit = if_aunit_constants=>no  ).
+        ENDIF.
+    ENDTRY.
+
+
+
+
+   data(lo_bal10) =  lo_bal->factory( )->add(
+        val = 'Das &1 ist &2 eine &3 Nachricht &4'
+        v1 = 'KATZE'
+        v2 = 'LOEWE'
+        v3 = 'DINO'
+        v4 = 'HUND'
+        ).
+
+    if lo_bal10->get( )-s_bapi_last-message <> 'Das KATZE ist LOEWE eine DINO Nachricht HUND'.
+      cl_aunit_assert=>fail(
+    msg    = 'blank text with v1 v2 usw'    " Error Message
+    quit = if_aunit_constants=>no  ).
     endif.
 
+    data(lt_bapi3) = lo_bal10->get( )-t_bapi.
+    IF lt_bapi3[ 1 ]-message <> 'Das KATZE ist LOEWE eine DINO Nachricht HUND' .
+      cl_aunit_assert=>fail(
+    msg    = 'blank text wit v1 v2 usw'    " Error Message
+    quit = if_aunit_constants=>no  ).
+
+    ENDIF.
   ENDMETHOD.
 
 
@@ -197,13 +238,13 @@ CLASS ltcl_unit_test_log IMPLEMENTATION.
     MESSAGE e001(/scwm/rf_de) INTO DATA(lv_msg).
     DATA(ls_sy) = sy.
 
-    DATA(lo_log) = NEW zls_cl_log(
+    DATA(lo_log) = mo_bal->factory(
         )->add( ls_sy
         )->add( ls_sy
         )->add_msg(
-          iv_msgty  = 'E'     " Nachrichtentyp
-          iv_msgid  = '/SCWM/RF_DE'
-          iv_msgno  = '003'
+          ty  = 'E'     " Nachrichtentyp
+          id  = '/SCWM/RF_DE'
+          no  = '003'
          ).
 *         ->db_save( ).
 
@@ -239,6 +280,61 @@ CLASS ltcl_unit_test_log IMPLEMENTATION.
 
     ENDIF.
 
+  ENDMETHOD.
+
+  METHOD test_exception.
+
+    MESSAGE e001(/scwm/rf_de) INTO DATA(lv_msg).
+    DATA(ls_sy) = sy.
+
+    mo_bal = mo_bal->factory(
+        )->add( ls_sy
+        )->add( ls_sy
+        )->add_msg(
+          ty  = 'E'     " Nachrichtentyp
+          id  = '/SCWM/RF_DE'
+          no  = '003'
+         ).
+
+    TRY.
+        RAISE EXCEPTION mo_bal->mx.
+
+      CATCH zls_cx_log INTO DATA(lx).
+
+        IF mo_bal <> lx->mo_bal.
+          cl_aunit_assert=>fail(
+            msg    = 'raise error with bal error'    " Error Message
+           quit = if_aunit_constants=>no  ).
+        ENDIF.
+
+    ENDTRY.
+
+
+    TRY.
+        MESSAGE e001(/scwm/rf_de) INTO DATA(lv_msg3).
+        DATA(lo_new) = mo_bal->factory( )->add_sy( ).
+        IF lo_new->check_msg_error( ).
+          RAISE EXCEPTION lo_new->mx.
+        ENDIF.
+
+        cl_aunit_assert=>fail(
+      msg    = 'raise error with bal error'    " Error Message
+     quit = if_aunit_constants=>no  ).
+
+      CATCH zls_cx_log INTO DATA(lx2).
+
+        IF lo_new <> lx2->mo_bal.
+          cl_aunit_assert=>fail(
+            msg    = 'raise error with bal error'    " Error Message
+           quit = if_aunit_constants=>no  ).
+        ENDIF.
+
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD setup.
+    mo_bal = new #(  ).
   ENDMETHOD.
 
 ENDCLASS.
@@ -535,14 +631,14 @@ CLASS ltcl_unit_test_msg_mapper IMPLEMENTATION.
 
     TRY.
 
-        RAISE EXCEPTION NEW cx_t100_msg(
-          t100_msgid = '00'
-          t100_msgno = '398'
-          t100_msgv1 = 'V1'
-          t100_msgv2 = 'V2'
-          t100_msgv3 = 'V3'
-          t100_msgv4 = 'V4'
-        ).
+        RAISE EXCEPTION TYPE cx_t100_msg
+          EXPORTING
+            t100_msgid = '00'
+            t100_msgno = '398'
+            t100_msgv1 = 'V1'
+            t100_msgv2 = 'V2'
+            t100_msgv3 = 'V3'
+            t100_msgv4 = 'V4'.
 
       CATCH cx_root INTO DATA(lx).
 
@@ -574,39 +670,39 @@ CLASS ltcl_unit_test_msg_mapper IMPLEMENTATION.
 
 
     TRY.
-        MESSAGE e398(00) WITH 'V1' 'V2' 'V3' 'V4' INTO lv_dummy.
-        RAISE EXCEPTION TYPE cx_business_place USING MESSAGE.
+*        MESSAGE e398(00) WITH 'V1' 'V2' 'V3' 'V4' INTO lv_dummy.
+*        RAISE EXCEPTION TYPE cx_demo_dyn_t100 USING MESSAGE.
 
 
       CATCH cx_root INTO lx.
 
-        MESSAGE e398(00) WITH 'V1' 'V2' 'V3' 'V4' INTO lv_dummy.
-        ls_sy = sy.
-        ls_sy_copy = ls_sy.
-
-        ls_bapi = NEW lcl_help_msg_mapper( )->get( lx )-s_bapi.
-
-        NEW lcl_help_msg_mapper( )->main(
-          EXPORTING
-            input           = ls_bapi
-*    io_typedescr_in =
-          IMPORTING
-            result          = ls_sy
-        ).
-
-        IF
-               ls_sy-msgid <> ls_sy_copy-msgid OR
-               ls_sy-msgno <> ls_sy_copy-msgno OR
-               ls_sy-msgv1 <> ls_sy_copy-msgv1 OR
-                ls_sy-msgv2 <> ls_sy_copy-msgv2 OR
-                 ls_sy-msgv3 <> ls_sy_copy-msgv3 OR
-                  ls_sy-msgv4 <> ls_sy_copy-msgv4
-                  .
-
-          cl_aunit_assert=>fail(
-             msg    = 'message info wrong'    " Error Message
-             quit = if_aunit_constants=>no  ).
-        ENDIF.
+*        MESSAGE e398(00) WITH 'V1' 'V2' 'V3' 'V4' INTO lv_dummy.
+*        ls_sy = sy.
+*        ls_sy_copy = ls_sy.
+*
+*        ls_bapi = NEW lcl_help_msg_mapper( )->get( lx )-s_bapi.
+*
+*        NEW lcl_help_msg_mapper( )->main(
+*          EXPORTING
+*            input           = ls_bapi
+**    io_typedescr_in =
+*          IMPORTING
+*            result          = ls_sy
+*        ).
+*
+*        IF
+*               ls_sy-msgid <> ls_sy_copy-msgid OR
+*               ls_sy-msgno <> ls_sy_copy-msgno OR
+*               ls_sy-msgv1 <> ls_sy_copy-msgv1 OR
+*                ls_sy-msgv2 <> ls_sy_copy-msgv2 OR
+*                 ls_sy-msgv3 <> ls_sy_copy-msgv3 OR
+*                  ls_sy-msgv4 <> ls_sy_copy-msgv4
+*                  .
+*
+*          cl_aunit_assert=>fail(
+*             msg    = 'message info wrong'    " Error Message
+*             quit = if_aunit_constants=>no  ).
+*        ENDIF.
 
     ENDTRY.
 
@@ -614,7 +710,7 @@ CLASS ltcl_unit_test_msg_mapper IMPLEMENTATION.
     TRY.
 * MESSAGE e398(00) WITH 'V1' 'V2' 'V3' 'V4' INTO lv_dummy.
 
-        RAISE EXCEPTION TYPE  cx_business_place MESSAGE ID '00' NUMBER '398' WITH 'V1' 'V2' 'V3' 'V4'.
+        RAISE EXCEPTION TYPE cx_demo_dyn_t100 MESSAGE ID '00' NUMBER '398' WITH 'V1' 'V2' 'V3' 'V4'.
 
 
       CATCH cx_root INTO lx.
