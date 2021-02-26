@@ -272,7 +272,7 @@ CLASS ltcl_unit_test_log IMPLEMENTATION.
 
     ENDIF.
 
-    IF lo_log->mt_log[ 5 ]-msgno <> '001'.
+    IF lo_log->mt_log[ 5 ]-no <> '001'.
 
       cl_aunit_assert=>fail(
     msg    = 'log handling error'    " Error Message

@@ -98,7 +98,7 @@ CLASS lcl_help_msg_mapper IMPLEMENTATION.
        ) )
        ( VALUE #( ( `NO`) ( `MSGNO`) ( `MSGNR`) ( `NUMBER`) ( `SYMSGNO`) ( `SYST_MSGNO`)
        ) )
-       ( VALUE #( ( `TYPE`) ( `MSGTY`) ( `MSGTYP`) ( `SEVERITY`) ( `SYST_MSGTY`) ( `BAPI_MTYPE`)
+       ( VALUE #( ( `TY`) ( `TYPE`) ( `MSGTY`) ( `MSGTYP`) ( `SEVERITY`) ( `SYST_MSGTY`) ( `BAPI_MTYPE`)
        ) )
        ( VALUE #( ( `MSGV1`) ( `MESSAGE_V1`) ( `ATTR1` ) ( `V1` )
        ) )

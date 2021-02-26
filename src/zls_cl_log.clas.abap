@@ -9,11 +9,12 @@ CLASS zls_cl_log DEFINITION
 
     CONSTANTS:
       BEGIN OF ss_default,
-        object      TYPE string VALUE 'ZSTC',
-        subobject   TYPE string VALUE 'DEFAULT',
+        object      TYPE string VALUE 'ZKAL',
+        subobject   TYPE string VALUE '001',
         extnumber   TYPE string VALUE '',
         description TYPE string VALUE '',
         days_delete TYPE i VALUE 90,
+        fm_name_new_task type string value 'ZLS_FM_01',
       END OF ss_default.
 
     INTERFACES if_serializable_object .
@@ -23,13 +24,13 @@ CLASS zls_cl_log DEFINITION
     TYPES:
       BEGIN OF ty_s_log,
         is_db_entry TYPE abap_bool,
-        type        TYPE msgty,
         date        TYPE sydatum,
         time        TYPE syuzeit,
-        message     TYPE bapiret2-message,
         tstmp       TYPE timestampl,
-        msgid       TYPE msgid,
-        msgno       TYPE msgno,
+        message     TYPE bapiret2-message,
+        ty          TYPE msgty,
+        id          TYPE msgid,
+        no          TYPE msgno,
         v1          TYPE bapiret2-message_v1,
         v2          TYPE bapiret2-message_v2,
         v3          TYPE bapiret2-message_v3,
@@ -44,13 +45,6 @@ CLASS zls_cl_log DEFINITION
         s_bapi_last  type bapiret2,
         t_bapi       TYPE bapiret2_tab,
       END OF ty_s_result_get_msg .
-
-*    class-data:
-*      begin of ty_S_in_factory,
-*        iv_object      TYPE clike DEFAULT ss_default-object
-*        iv_subobject   TYPE clike DEFAULT ss_default-subobject
-*        iv_extnumber   TYPE clike OPTIONAL
-*        iv_description TYPE clike OPTIONAL
 
     CONSTANTS:
       BEGIN OF cs_gui_action,
@@ -222,14 +216,12 @@ CLASS zls_cl_log IMPLEMENTATION.
           RETURN.
         ENDIF.
 
-
-
         DATA(ls_time) = lcl_help=>get_time( ).
 
         LOOP AT lt_log INTO DATA(ls_log).
 
           IF ty CA 'ES'.
-            ls_log-type = ty.
+            ls_log-ty = ty.
           ENDIF.
 
           ls_log-tstmp   = ls_time-tstmp.
@@ -240,14 +232,14 @@ CLASS zls_cl_log IMPLEMENTATION.
         if v1 is not initial or v2 is not INITIAL or v3 is not initial or v4 is NOT INITIAL.
         data(ls_msg) = lcl_help_msg_mapper=>factory( )->get_by_text(
             val    = ls_log-message
-            type   = ls_log-type
+            type   = ls_log-ty
             v1     = v1
             v2     = v2
             v3     = v3
             v4     = v4 ).
 
-          ls_log-msgid = ls_msg-s_bapi-id.
-          ls_log-msgno = ls_msg-s_bapi-number.
+          ls_log-id = ls_msg-s_bapi-id.
+          ls_log-no = ls_msg-s_bapi-number.
           ls_log-v1    = ls_msg-s_bapi-message_v1.
           ls_log-v2    = ls_msg-s_bapi-message_v2.
           ls_log-v3    = ls_msg-s_bapi-message_v3.
@@ -450,7 +442,7 @@ CLASS zls_cl_log IMPLEMENTATION.
               result          = ls_log
           ).
 
-          ls_log-type = ls_bal-msgty.
+          ls_log-ty = ls_bal-msgty.
           ls_log-tstmp = ls_bal-time_stmp.
 
           DATA(ls_time) = lcl_help=>get_time( ls_bal-time_stmp ).
@@ -585,7 +577,7 @@ CLASS zls_cl_log IMPLEMENTATION.
         DATA(lv_task)       = CONV string( lcl_help=>get_time( )-tstmp ).
         DATA(lv_trfcqnam)   = CONV trfcqnam( 'ZRG_' && ms_balhdr-subobject ).
 
-        CALL FUNCTION 'ZFM_STC_002' "STARTING NEW TASK lv_task
+        CALL FUNCTION ss_default-fm_name_new_task "STARTING NEW TASK lv_task
           DESTINATION 'NONE'
           EXPORTING
             ij_objekt   = lv_log_as_xml
@@ -669,9 +661,9 @@ CLASS zls_cl_log IMPLEMENTATION.
     DATA lt_balm TYPE STANDARD TABLE OF balm.
 
     lt_balm = VALUE #( FOR row IN mt_log (
-        msgid = row-msgid
-        msgno = row-msgno
-        msgty = row-type
+        msgid = row-id
+        msgno = row-no
+        msgty = row-ty
         msgv1 = row-v1
         msgv2 = row-v2
         msgv3 = row-v3
@@ -770,7 +762,7 @@ CLASS zls_cl_log IMPLEMENTATION.
     "create tags to activate database search functionality
     "msgid msgno..
     LOOP AT mt_log INTO DATA(ls_log).
-      ls_tag-tagmsg = ls_tag-tagmsg  && ls_log-type && ls_log-msgno && '(' && ls_log-msgid && ')'.
+      ls_tag-tagmsg = ls_tag-tagmsg  && ls_log-ty && ls_log-no && '(' && ls_log-id && ')'.
     ENDLOOP.
 
     "create tags to activate database search functionality

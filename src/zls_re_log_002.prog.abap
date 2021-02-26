@@ -1,235 +1,46 @@
-report zls_re_log_001.
+REPORT zls_re_log_002.
 
-parameters pa_obj type balhdr-object.
 
-class lcl_app definition deferred.
-class lcl_alv_ida definition deferred.
-class lcl_alv_grid definition deferred.
-class lcl_alv_salv definition deferred.
-class lcl_popup definition deferred.
-class lcl_selscreen definition deferred.
 
-data go_app type ref to lcl_app.
+CLASS lcl_app DEFINITION DEFERRED.
+CLASS lcl_alv_ida DEFINITION DEFERRED.
+CLASS lcl_popup DEFINITION DEFERRED.
+CLASS lcl_selscreen DEFINITION DEFERRED.
+*DATA go_app TYPE REF TO lcl_app.
 
-class hlp definition inheriting from zcl_utility_abap_2102.
-endclass.
+*parameters pa_table type string.
 
-class lcl_app definition.
+CLASS hlp DEFINITION INHERITING FROM zcl_utility_abap_2102.
+ENDCLASS.
 
-  public section.
+CLASS lcl_app DEFINITION.
 
-    data mo_alv_main  type ref to lcl_alv_grid.
-    data mo_alv_popup type ref to lcl_alv_Salv. "lcl_popup.
-    data mo_selscreen type ref to lcl_selscreen.
+  PUBLIC SECTION.
 
-    methods main.
+    CLASS-DATA so_app TYPE REF TO lcl_app READ-ONLY.
 
-    class-methods factory
-      returning
-        value(result) type ref to lcl_app.
+    DATA mo_alv_main TYPE REF TO lcl_alv_ida.
+    DATA mo_alv_popup TYPE REF TO lcl_popup.
+    DATA mo_selscreen TYPE REF TO lcl_selscreen.
+    METHODS main.
 
-    data mt_db type standard table of balhdr with empty key.
+    CLASS-METHODS factory
+      RETURNING
+        VALUE(result) TYPE REF TO lcl_app.
 
-  protected section.
-    class-data so_app type ref to lcl_app.
+ENDCLASS.
 
-    methods db_read.
+CLASS lcl_post DEFINITION.
 
-endclass.
+ENDCLASS.
 
 
+CLASS lcl_alv_salv DEFINITION.
 
-class lcl_selscreen definition.
+  PUBLIC SECTION.
 
-  public section.
-
-    class-data:
-      begin of ss_1000,
-        so_obj   type range of balhdr-object,
-        pa_werks type werks_d,
-        pa_lgort type lgort_d,
-        pa_lgorp type lgort_d,
-        pa_lgnum type lgnum,
-        pa_lgtyp type lgtyp,
-        pa_lgpla type lgpla,
-        rb1      type abap_bool,
-        rb2      type abap_bool,
-      end of ss_1000.
-
-    methods on_init.
-    methods on_output.
-    methods on_screen.
-    methods on_start.
-
-
-  protected section.
-
-    class-methods send_screen_2_data.
-    class-methods check_before_start.
-
-endclass.
-
-class lcl_selscreen implementation.
-
-  method on_init.
-
-
-    if 1 = 0.
-
-    endif.
-
-
-
-*    break-point.
-
-
-*    send_screen_2_data(  ).
-
-*    com1 = 'Sofort ausführen'.
-*    com2 = 'ALV Ausgabe'.
-*    com3 = 'Aktionen des Programms:'.
-*    com4 = '1. Datei über Schnittstelle einlesen'.
-*    com5 = '2. ALV Ausgabe (optional)'.
-*    com6 = '3. Inhalt der Tabelle Z034TPP_T_SST_03 löschen'.
-*    com7 = '4. Werte aus der Datei in die Tabelle schreiben'.
-*    but1 = 'Aktuelle Daten im SAP anzeigen'.
-
-    %_pa_obj_%_app_%-text = 'Partnerlagerort'.
-**    %_pa_sep_%_app_%-text = .
-**    %_pa_head_%_app_%-text = .
-
-    sy-title = 'Selscreen title'.
-
-*    com1 = 'Anzahl Kopfzeilen (werden ignoriert)'.
-*    com2 = 'Trennzeichen der Spalten'.
-*
-*    b1t = 'Buchungsparameter'.
-*    b2t = 'Datei'.
-
-*    sv_title = 'Migration Bestände'.
-
-
-*    but1 = '     Datei laden...'.
-*    send_data_2_screen(  ).
-
-  endmethod.
-
-  method on_output.
-
-*    com3 = icon_led_green && ` Report kann ausgeführt werden`.
-*    lcl_help=>gui_screen( elem_intensify = 'X' i_any = 'COM3' ).
-*
-*    if ss_1000-t_file is initial.
-*      but1(4) = icon_incomplete.
-*      com3 = icon_led_red && ` Vor dem Ausführen bitte Datei laden`.
-*    else.
-*      but1(4) = icon_checked.
-*    endif.
-*
-*    if pa_lgnum is initial
-*    or pa_lgorp is initial
-*    or pa_lgort is initial
-*    or pa_werks is initial
-*    or pa_lgpla is initial
-*    or pa_lgtyp is initial.
-**      com3 = icon_led_red && ` Vor dem Ausführen bitte alle Buchungsparameter füllen`.
-*    endif.
-
-
-  endmethod.
-
-  method on_screen.
-
-    try.
-
-*        CASE sy-ucomm.
-*
-*          WHEN 'ZMOCK'.
-*            mock_data( ).
-*
-*          WHEN 'ZTAB'.
-**            hlp=>gui_popup( start_se16n_edit = 'X' i_any = 'Z034TPP_T_SST_02' ).
-*
-*          WHEN 'ZFILE'.
-*            upload_file( ).
-*
-*        ENDCASE.
-
-
-      catch cx_root into data(lx_root).
-        hlp=>gui_popup( lx_root ).
-    endtry.
-
-  endmethod.
-
-  method on_start.
-
-    try.
-
-        check_before_start( ).
-        send_screen_2_data(  ).
-        go_app->main(   ).
-
-      catch cx_root into data(lx_root).
-        hlp=>gui_popup( lx_root ).
-        leave list-processing.
-    endtry.
-
-  endmethod.
-
-
-*  METHOD send_data_2_screen.
-*
-*    "Daten an Selbild übertragen
-*    hlp=>gui_screen(
-*      seldata_set = 'X'
-*      val = ss_1000 ).
-*
-*  ENDMETHOD.
-
-  method send_screen_2_data.
-
-*    ss_1000-so_obj = value #( ( sign = 'I' option = 'EQ' low = pa_obj ) ).
-
-  endmethod.
-
-  method check_before_start.
-*
-*    if ss_1000-t_file is initial.
-*      lcl_help=>x_raise( 'Bitte zuerst die Migrationsdatei laden' ).
-*    endif.
-*
-*
-*    if pa_lgnum is initial
-*    or pa_lgorp is initial
-*    or pa_lgort is initial
-*    or pa_werks is initial
-*    or pa_lgpla is initial
-*    or pa_lgtyp is initial.
-*      lcl_help=>x_raise( `Vor dem Ausführen bitte alle Buchungsparameter füllen` ).
-*    endif.
-*
-*
-
-  endmethod.
-
-endclass.
-
-
-"! database changes
-class lcl_crud_db definition.
-
-endclass.
-
-class lcl_alv_salv definition.
-
-  public section.
-
-    types:
-      begin of ty_s_out,
-      type type c length 1,
-        message type c length 90,
-
+    TYPES:
+      BEGIN OF ty_s_out,
 *        s_file     type lcl_app=>ty_s_file,
 *        s_db       type lcl_app=>ty_s_db,
 *        matnr       type  matnr,
@@ -244,84 +55,83 @@ class lcl_alv_salv definition.
 *        date           type sydatum,
 *        time           type sy-uzeit,
 *        t_alv_style type lvc_t_styl,
-        t_celltype type salv_t_int4_column,
-        t_color    type lvc_t_scol,
+        t_celltype TYPE salv_t_int4_column,
+        t_color    TYPE lvc_t_scol,
 *        s_data         type input_type
-      end of ty_s_out.
+      END OF ty_s_out.
 
-    types ty_t_out type standard table of ty_s_out with empty key.
+    TYPES ty_t_out TYPE STANDARD TABLE OF ty_s_out WITH EMPTY KEY.
 
-    data st_out type ty_t_out.
-    data so_grid type ref to cl_salv_table.
-    data so_parent_cont type ref to cl_gui_container.
-    methods set_table
-      importing value(it_data) type standard table optional.
+    CLASS-DATA st_out TYPE ty_t_out.
+    CLASS-DATA so_grid TYPE REF TO cl_salv_table.
+    CLASS-DATA so_parent_cont TYPE REF TO cl_gui_container.
+    CLASS-METHODS set_table
+      IMPORTING VALUE(it_data) TYPE STANDARD TABLE OPTIONAL.
 
-    methods cfw_init.
-    methods cfw_free.
-    methods cfw_display.
+    CLASS-METHODS cfw_init.
+    CLASS-METHODS cfw_free.
+    CLASS-METHODS cfw_display.
 
 
-  protected section.
 
-    methods on_added_function
-      for event added_function
-      of cl_salv_events
-      importing e_salv_function sender.
+  PROTECTED SECTION.
 
-    methods on_link_click
-      for event link_click
-      of cl_salv_events_table
-      importing row column sender.
+    CLASS-METHODS on_added_function
+      FOR EVENT added_function
+      OF cl_salv_events
+      IMPORTING e_salv_function sender.
 
-    methods on_double_click
-      for event double_click
-      of cl_salv_events_table
-      importing row column sender.
+    CLASS-METHODS on_link_click
+      FOR EVENT link_click
+      OF cl_salv_events_table
+      IMPORTING row column sender.
 
-    methods on_before_salv_function
-      for event before_salv_function
-      of cl_salv_events
-      importing e_salv_function sender.
+    CLASS-METHODS on_double_click
+      FOR EVENT double_click
+      OF cl_salv_events_table
+      IMPORTING row column sender.
 
-    methods on_after_salv_function
-      for event after_salv_function
-      of cl_salv_events
-      importing e_salv_function sender.
+    CLASS-METHODS on_before_salv_function
+      FOR EVENT before_salv_function
+      OF cl_salv_events
+      IMPORTING e_salv_function sender.
 
-    methods set_handler.
-    methods set_alv
-      raising
+    CLASS-METHODS on_after_salv_function
+      FOR EVENT after_salv_function
+      OF cl_salv_events
+      IMPORTING e_salv_function sender.
+
+    CLASS-METHODS set_handler.
+    CLASS-METHODS set_alv
+      RAISING
         cx_salv_existing
         cx_salv_not_found
         cx_salv_wrong_call.
 
-endclass.
+ENDCLASS.
 
-class lcl_alv_salv implementation.
 
-  method set_table.
 
-    data lv_data type string.
-    data ls_out type ty_s_out.
-    clear st_out.
-    data lr_row type ref to data.
 
-    loop at it_data reference into lr_row.
-*    into lv_data.
+CLASS lcl_alv_salv IMPLEMENTATION.
 
-      clear ls_out.
+  METHOD set_table.
+
+    DATA lv_data TYPE string.
+    DATA ls_out TYPE ty_s_out.
+    CLEAR st_out.
+
+    LOOP AT it_data INTO lv_data.
+
+      CLEAR ls_out.
 *      ls_out-s_file = lv_data.
 
-
-    ls_out-message = 'Nachricht'.
-
-      insert value #(
+      INSERT VALUE #(
 *           fname = 'TEXT'
            color-col = 2  "grün
            color-int = 1
            color-inv = 0
-        ) into table ls_out-t_color.
+        ) INTO TABLE ls_out-t_color.
 
 
 *      if sy-tabix < 13.
@@ -353,35 +163,34 @@ class lcl_alv_salv implementation.
 *
 *      endif.
 
-      insert ls_out into table st_out.
+      INSERT ls_out INTO TABLE st_out.
 
-    endloop.
+    ENDLOOP.
 
 
-  endmethod.
+  ENDMETHOD.
 
-  method cfw_init.
-    try.
+  METHOD cfw_init.
+    TRY.
 
 *    if  so_grid is not bound.
 
-        so_parent_cont = new cl_gui_docking_container(
-*        repid     = sy-repid
-*                          dynnr     = sy-dynnr
+        so_parent_cont = NEW cl_gui_docking_container( repid     = sy-repid
+                          dynnr     = sy-dynnr
                           side      = cl_gui_docking_container=>dock_at_bottom
-                          extension = '180' "cl_gui_docking_container=>ws_ws_maximizebox
+                          extension = '100' "cl_gui_docking_container=>ws_ws_maximizebox
 
 *                    ratio     = 50
                         ).
 
         cl_salv_table=>factory(
-      exporting
+      EXPORTING
 *        list_display   = IF_SALV_C_BOOL_SAP=>FALSE    " ALV Displayed in List Mode
         r_container    =  so_parent_cont    " Abstract Container for GUI Controls
 *        container_name =
-          importing
+          IMPORTING
             r_salv_table   = so_grid    " Basis Class Simple ALV Tables
-          changing
+          CHANGING
             t_table        = st_out
         ).
 *      catch cx_salv_msg.    "
@@ -394,32 +203,32 @@ class lcl_alv_salv implementation.
 
 *    endif.
 
-      catch cx_root into data(lx_root).
+      CATCH cx_root INTO DATA(lx_root).
         hlp=>x_raise(  lx_root ).
-    endtry.
-  endmethod.
+    ENDTRY.
+  ENDMETHOD.
 
-  method cfw_free.
+  METHOD cfw_free.
 
-    if so_grid is bound.
+    IF so_grid IS BOUND.
       so_grid->close_screen(  ).
-      free so_grid.
-    endif.
+      FREE so_grid.
+    ENDIF.
 
-    if so_parent_cont is bound.
+    IF so_parent_cont IS BOUND.
       so_parent_cont->free( ).
-      free so_parent_cont.
-    endif.
+      FREE so_parent_cont.
+    ENDIF.
 
-  endmethod.
+  ENDMETHOD.
 
-  method cfw_display.
+  METHOD cfw_display.
 
-    if so_grid is not bound.
+    IF so_grid IS NOT BOUND.
 
       cfw_init(  ).
       so_grid->display(  ).
-    else.
+    ELSE.
 
       so_grid->refresh(
 *          exporting
@@ -427,20 +236,20 @@ class lcl_alv_salv implementation.
 *            refresh_mode = IF_SALV_C_REFRESH=>SOFT    " ALV: Data Element for Constants
       ).
 
-    endif.
+    ENDIF.
 
 
 *    cl_abap_list_layout=>suppress_toolbar( ).
 *    write 'ALV AUSGABE'.
 
 
-  endmethod.
+  ENDMETHOD.
 
-  method on_added_function.
+  METHOD on_added_function.
 
-    case e_salv_function.
+    CASE e_salv_function.
 
-      when 'ZDELETE'.
+      WHEN 'ZDELETE'.
 *        if  lcl_help=>check( popup_confirm = 'X' i_any = 'Datei aus Programm entfernen?' ).
 *          clear lcl_selscreen=>ss_1000-t_file.
 *          cfw_free(  ).
@@ -448,41 +257,41 @@ class lcl_alv_salv implementation.
 *          cl_gui_cfw=>set_new_ok_code( 'DUMMY' ).
 *        endif.
 
-      when 'BTN2'.
-        message 'Button2 gedrueckt.' type 'I'.
-      when 'BTN3'.
-        message 'Button3 gedrueckt.' type 'I'.
-      when 'BTN4'.
-        message 'Button3 gedrueckt mit geandertem Funktionscode.' type 'I'.
-    endcase.
+      WHEN 'BTN2'.
+        MESSAGE 'Button2 gedrueckt.' TYPE 'I'.
+      WHEN 'BTN3'.
+        MESSAGE 'Button3 gedrueckt.' TYPE 'I'.
+      WHEN 'BTN4'.
+        MESSAGE 'Button3 gedrueckt mit geandertem Funktionscode.' TYPE 'I'.
+    ENDCASE.
 
 
-  endmethod.
+  ENDMETHOD.
 
 
-  method set_handler.
+  METHOD set_handler.
 
-    set handler on_added_function
-    for so_grid->get_event( ).
+    SET HANDLER on_added_function
+    FOR so_grid->get_event( ).
 
-    set handler on_double_click
-    for so_grid->get_event( ).
+    SET HANDLER on_double_click
+    FOR so_grid->get_event( ).
 
-    set handler on_before_salv_function
-    for so_grid->get_event( ).
+    SET HANDLER on_before_salv_function
+    FOR so_grid->get_event( ).
 
-    set handler on_after_salv_function
-    for so_grid->get_event( ).
+    SET HANDLER on_after_salv_function
+    FOR so_grid->get_event( ).
 
-    set handler on_link_click
-    for so_grid->get_event( ).
+    SET HANDLER on_link_click
+    FOR so_grid->get_event( ).
 
-  endmethod.
+  ENDMETHOD.
 
 
-  method set_alv.
+  METHOD set_alv.
 
-    try.
+    TRY.
 * Grid-Header
 *    DATA(o_grid_header) = NEW cl_salv_form_layout_grid( ).
 *
@@ -549,23 +358,23 @@ class lcl_alv_salv implementation.
         position = if_salv_c_function_position=>right_of_salv_functions ).
 
 
-        try.
+        TRY.
             so_grid->get_columns( )->set_cell_type_column( 'T_CELLTYPE' ).
-          catch cx_salv_data_error.
-        endtry.
+          CATCH cx_salv_data_error.
+        ENDTRY.
 
-      catch cx_root.
-    endtry.
+      CATCH cx_root.
+    ENDTRY.
 
-  endmethod.
+  ENDMETHOD.
 
-  method on_link_click.
+  METHOD on_link_click.
 
-    break-point.
+    BREAK-POINT.
 
-  endmethod.
+  ENDMETHOD.
 
-  method on_double_click.
+  METHOD on_double_click.
 
 *row column sender.
 *break-point.
@@ -583,26 +392,311 @@ class lcl_alv_salv implementation.
 *
 *    cfw_display(  ).
 
-  endmethod.
+  ENDMETHOD.
 
-  method on_before_salv_function.
+  METHOD on_before_salv_function.
 
-  endmethod.
+  ENDMETHOD.
 
-  method on_after_salv_function.
+  METHOD on_after_salv_function.
 
-  endmethod.
+  ENDMETHOD.
 
-endclass.
+ENDCLASS.
 
-class lcl_alv_grid definition.
 
-  public section.
 
-    types:
-      begin of ty_s_out,
-        alv_ampel           type char10, "char10,
-        s_balhdr            like line of go_app->mt_db,
+
+
+CLASS lcl_selscreen DEFINITION.
+
+  PUBLIC SECTION.
+
+    TYPES:
+      BEGIN OF ty_s_1000,
+        pa_werks TYPE werks_d,
+        pa_lgort TYPE lgort_d,
+        pa_lgorp TYPE lgort_d,
+        pa_lgnum TYPE lgnum,
+        pa_lgtyp TYPE lgtyp,
+        pa_lgpla TYPE lgpla,
+        rb1      TYPE abap_bool,
+        rb2      TYPE abap_bool,
+*        pa_sintf type z034tbct_schnitt-schni,
+*        t_file   type standard table of lcl_app=>ty_s_file with default key,
+      END OF ty_s_1000.
+
+    DATA mo_app TYPE REF TO lcl_app.
+
+    CLASS-DATA ss_1000 TYPE ty_s_1000.
+
+    METHODS on_init.
+    METHODS on_output.
+    METHODS on_screen.
+    METHODS on_start.
+
+    CLASS-DATA sv_title TYPE string.
+
+  PROTECTED SECTION.
+
+    CLASS-METHODS send_data_2_screen.
+    CLASS-METHODS send_screen_2_data.
+    CLASS-METHODS upload_file.
+    CLASS-METHODS check_before_start.
+    CLASS-METHODS mock_data.
+
+ENDCLASS.
+
+CLASS lcl_selscreen IMPLEMENTATION.
+
+  METHOD on_init.
+
+
+    IF 1 = 0.
+
+    ENDIF.
+
+
+
+*    break-point.
+
+
+*    send_screen_2_data(  ).
+
+*    com1 = 'Sofort ausführen'.
+*    com2 = 'ALV Ausgabe'.
+*    com3 = 'Aktionen des Programms:'.
+*    com4 = '1. Datei über Schnittstelle einlesen'.
+*    com5 = '2. ALV Ausgabe (optional)'.
+*    com6 = '3. Inhalt der Tabelle Z034TPP_T_SST_03 löschen'.
+*    com7 = '4. Werte aus der Datei in die Tabelle schreiben'.
+*    but1 = 'Aktuelle Daten im SAP anzeigen'.
+
+*    %_pa_lgorp_%_app_%-text = 'Partnerlagerort'.
+**    %_pa_sep_%_app_%-text = .
+**    %_pa_head_%_app_%-text = .
+*
+*    com1 = 'Anzahl Kopfzeilen (werden ignoriert)'.
+*    com2 = 'Trennzeichen der Spalten'.
+*
+*    b1t = 'Buchungsparameter'.
+*    b2t = 'Datei'.
+
+    sv_title = 'Migration Bestände'.
+    sy-title = sv_title.
+
+*    but1 = '     Datei laden...'.
+*    send_data_2_screen(  ).
+
+  ENDMETHOD.
+
+  METHOD on_output.
+
+*    com3 = icon_led_green && ` Report kann ausgeführt werden`.
+*    lcl_help=>gui_screen( elem_intensify = 'X' i_any = 'COM3' ).
+*
+*    if ss_1000-t_file is initial.
+*      but1(4) = icon_incomplete.
+*      com3 = icon_led_red && ` Vor dem Ausführen bitte Datei laden`.
+*    else.
+*      but1(4) = icon_checked.
+*    endif.
+*
+*    if pa_lgnum is initial
+*    or pa_lgorp is initial
+*    or pa_lgort is initial
+*    or pa_werks is initial
+*    or pa_lgpla is initial
+*    or pa_lgtyp is initial.
+**      com3 = icon_led_red && ` Vor dem Ausführen bitte alle Buchungsparameter füllen`.
+*    endif.
+
+
+  ENDMETHOD.
+
+  METHOD on_screen.
+
+    TRY.
+
+*        CASE sy-ucomm.
+*
+*          WHEN 'ZMOCK'.
+*            mock_data( ).
+*
+*          WHEN 'ZTAB'.
+**            hlp=>gui_popup( start_se16n_edit = 'X' i_any = 'Z034TPP_T_SST_02' ).
+*
+*          WHEN 'ZFILE'.
+*            upload_file( ).
+*
+*        ENDCASE.
+
+
+      CATCH cx_root INTO DATA(lx_root).
+        hlp=>gui_popup( lx_root ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD on_start.
+
+    TRY.
+
+        check_before_start( ).
+        send_screen_2_data(  ).
+        mo_app->main(   ).
+
+      CATCH cx_root INTO DATA(lx_root).
+        hlp=>gui_popup( lx_root ).
+        LEAVE LIST-PROCESSING.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD send_data_2_screen.
+
+    "Daten an Selbild übertragen
+    hlp=>gui_screen(
+      seldata_set = 'X'
+      val = ss_1000 ).
+
+  ENDMETHOD.
+
+  METHOD send_screen_2_data.
+
+*    data(lt_file) = ss_1000-t_file.
+
+    "Selbild Daten laden
+    hlp=>gui_screen(
+      EXPORTING
+        seldata_get = 'X'
+      IMPORTING
+        result = ss_1000 ).
+
+*    ss_1000-t_file = lt_file.
+
+  ENDMETHOD.
+
+
+  METHOD upload_file.
+*
+*    data lt_asc type string_table.
+*
+*    hlp=>gui_screen( status_progress = 'X' val = text-002 ). "Ladevorgang...
+*
+*    hlp=>gui_popup(
+*       exporting
+*        file_upload      = 'X'
+*        i_any            = 'ASC'
+*        raise_error      = abap_true
+*      importing
+*        e_any            = lt_asc
+*        ev_answer        = data(lv_answer)
+*    ).
+*
+*    if lv_answer = lcl_help=>cs-s_popup_answer-exit.
+*      return.
+*    endif.
+*
+*    data lv_index type i.
+**    data ls_file type lcl_app=>ty_s_file. "ty_s_csv.
+*    clear ss_1000-t_file.
+*
+*    loop at lt_asc into data(lv_line).
+*      if sy-tabix <= pa_head.
+*        continue.
+*      endif.
+*
+*      clear ls_file.
+*
+*      do.
+*        try.
+*            lv_index = sy-index.
+*            assign component lv_index of structure ls_file to field-symbol(<lv_component>).
+*            if sy-subrc <> 0.
+*              exit.
+*            endif.
+*            <lv_component> = segment( val = lv_line  sep = pa_sep index = lv_index ) .
+*
+*          catch cx_root.
+*        endtry.
+*      enddo.
+*
+*      insert ls_file into table ss_1000-t_file .
+*    endloop.
+*
+*    lcl_salv_table=>set_table( ss_1000-t_file ).
+*    lcl_salv_table=>cfw_display( ).
+
+  ENDMETHOD.
+
+
+  METHOD check_before_start.
+*
+*    if ss_1000-t_file is initial.
+*      lcl_help=>x_raise( 'Bitte zuerst die Migrationsdatei laden' ).
+*    endif.
+*
+*
+*    if pa_lgnum is initial
+*    or pa_lgorp is initial
+*    or pa_lgort is initial
+*    or pa_werks is initial
+*    or pa_lgpla is initial
+*    or pa_lgtyp is initial.
+*      lcl_help=>x_raise( `Vor dem Ausführen bitte alle Buchungsparameter füllen` ).
+*    endif.
+*
+*
+
+  ENDMETHOD.
+
+
+  METHOD mock_data.
+
+*
+*    data ls_file type lcl_app=>ty_s_file.
+*    ls_file-sernr = '72261100194668'.
+*    ls_file-matnr = 'A9672603700'.
+*    ls_file-lgtyp = '66'.
+*    ls_file-lgpla = '101014'.
+*    ls_file-exidv_1 = '1'.
+*    ls_file-vhilm_1 = 'T50223'.
+*    ls_file-exidv_2 = '14'.
+*    ls_file-vhilm_2 = 'T50223'.
+*
+**    insert lcl_help=>msg( 'Das iste ine NAchricht' )-s_bapi into table ls_db-t_log.
+**    insert ls_db into table st_db.
+*    insert ls_file into table ss_1000-t_file.
+*
+*    ls_file-sernr = 'ABCDEFGH'.
+**    ls_file-exidv_2 = '14'.
+*    insert ls_file into table ss_1000-t_file.
+*
+**    ls_db-s_file-sernr = '100000D0995118'.
+**insert ls_db into table st_db.
+*
+**    insert lcl_help=>msg( i_any = 'Datei unvollständigt' i_type = 'E' )-s_bapi into table ls_db-t_log.
+*    insert ls_file into table ss_1000-t_file.
+*
+*    insert initial line into table ss_1000-t_file.
+*    insert initial line into table ss_1000-t_file.
+*    insert initial line into table ss_1000-t_file.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+
+
+CLASS lcl_alv_grid DEFINITION.
+
+  PUBLIC SECTION.
+
+    TYPES:
+      BEGIN OF ty_s_out,
+        alv_ampel           TYPE char10, "char10,
 *        s_file              type lcl_app=>ty_s_file,
 *        s_db                type lcl_app=>ty_s_db,
 *        exidv_child         type exidv,
@@ -620,87 +714,81 @@ class lcl_alv_grid definition.
 *        lgnum              type lgnum,
 *        lgtyp              type lgtyp,
 *        lgpla              type lgpla,
-        button_create_sernr type string,
-        button_create_hu    type string,
-        button_pack_hu      type string,
-        button_transfer_hu  type string,
+        button_create_sernr TYPE string,
+        button_create_hu    TYPE string,
+        button_pack_hu      TYPE string,
+        button_transfer_hu  TYPE string,
 *
-        button_log          type string,
-        t_log               type bapiret2_tab,
-        t_alv_style         type lvc_t_styl,
-        t_color             type lvc_t_scol,
-      end of ty_s_out.
+        button_log          TYPE string,
+        t_log               TYPE bapiret2_tab,
+        t_alv_style         TYPE lvc_t_styl,
+        t_color             TYPE lvc_t_scol,
+      END OF ty_s_out.
 
-    types ty_t_out type standard table of ty_s_out with empty key.
+    TYPES ty_t_out TYPE STANDARD TABLE OF ty_s_out WITH EMPTY KEY.
 
-    data mt_out type ty_t_out.
-    data so_grid type ref to cl_gui_alv_grid.
+    CLASS-DATA st_out TYPE ty_t_out.
+    CLASS-DATA so_grid TYPE REF TO cl_gui_alv_grid.
 
-    methods set_table
-      importing value(it_data) type standard table optional.
+    CLASS-METHODS set_table
+      IMPORTING VALUE(it_data) TYPE STANDARD TABLE OPTIONAL.
 
-    methods cfw_init.
-    methods cfw_free.
-    methods cfw_display.
+    CLASS-METHODS cfw_init.
+    CLASS-METHODS cfw_free.
+    CLASS-METHODS cfw_display.
 
 
-  protected section.
+  PROTECTED SECTION.
 
-    data st_fcat     type standard table of lvc_s_fcat.
-    data ss_layout   type lvc_s_layo.
-    data ss_variant  type disvariant.
-    data st_excl_tb  type ui_functions.
+    CLASS-DATA st_fcat     TYPE STANDARD TABLE OF lvc_s_fcat.
+    CLASS-DATA ss_layout   TYPE lvc_s_layo.
+    CLASS-DATA ss_variant  TYPE disvariant.
+    CLASS-DATA st_excl_tb  TYPE ui_functions.
 
-    methods on_user_command for event user_command of cl_gui_alv_grid
-      importing e_ucomm sender.
+    CLASS-METHODS on_user_command FOR EVENT user_command OF cl_gui_alv_grid
+      IMPORTING e_ucomm sender.
 
-    methods on_data_changed
-      for event data_changed  of  cl_gui_alv_grid
-      importing er_data_changed e_ucomm sender .
+    CLASS-METHODS on_data_changed
+      FOR EVENT data_changed  OF  cl_gui_alv_grid
+      IMPORTING er_data_changed e_ucomm sender .
 
-    methods on_data_changed_finished
-      for event data_changed_finished  of  cl_gui_alv_grid
-      importing et_good_cells e_modified sender.
+    CLASS-METHODS on_data_changed_finished
+      FOR EVENT data_changed_finished  OF  cl_gui_alv_grid
+      IMPORTING et_good_cells e_modified sender.
 
-    methods on_toolbar for event toolbar of cl_gui_alv_grid
-      importing e_object e_interactive sender.
+    CLASS-METHODS on_toolbar FOR EVENT toolbar OF cl_gui_alv_grid
+      IMPORTING e_object e_interactive sender.
 
-    methods  on_hotspot_click for event hotspot_click of cl_gui_alv_grid
-      importing e_row_id e_column_id es_row_no.
+    CLASS-METHODS  on_hotspot_click FOR EVENT hotspot_click OF cl_gui_alv_grid
+      IMPORTING e_row_id e_column_id es_row_no.
 
-    methods on_button_click for event button_click of cl_gui_alv_grid
-      importing
+    CLASS-METHODS on_button_click FOR EVENT button_click OF cl_gui_alv_grid
+      IMPORTING
         es_col_id
         es_row_no
         sender.
 
-    methods on_double_click for event double_click of cl_gui_alv_grid
-      importing
-        es_row_no
-        e_column
-        e_row
-        sender.
+    CLASS-METHODS set_handler.
+    CLASS-METHODS set_style.
+    CLASS-METHODS set_color.
+    CLASS-METHODS set_fcat.
 
-    methods set_handler.
-    methods set_style.
-    methods set_color.
-    methods set_fcat.
+    CLASS-METHODS set_layout
+      RETURNING
+        VALUE(rs_layout) TYPE lvc_s_layo.
+    CLASS-METHODS set_variant
+      RETURNING
+        VALUE(rs_variant) TYPE disvariant.
+    CLASS-METHODS set_toolbar_excl
+      RETURNING
+        VALUE(rt_excl_tb) TYPE ui_functions..
 
-    methods set_layout
-      returning
-        value(rs_layout) type lvc_s_layo.
-    methods set_variant
-      returning
-        value(rs_variant) type disvariant.
-    methods set_toolbar_excl
-      returning
-        value(rt_excl_tb) type ui_functions..
+ENDCLASS.
 
-endclass.
 
-class lcl_alv_grid implementation.
+CLASS lcl_alv_grid IMPLEMENTATION.
 
-  method cfw_display.
+  METHOD cfw_display.
 
 *    field-symbols <tab> type standard table.
 *    assign st_r_out->* to <tab>.
@@ -714,7 +802,7 @@ class lcl_alv_grid implementation.
     set_color(  ).
     set_fcat( ).
 
-    if so_grid is not bound.
+    IF so_grid IS NOT BOUND.
 
       cfw_init( ).
       set_handler( ).
@@ -723,7 +811,7 @@ class lcl_alv_grid implementation.
       set_toolbar_excl( ).
 
       so_grid->set_table_for_first_display(
-        exporting
+        EXPORTING
 *        i_buffer_active               =     " Buffering Active
 *        i_bypassing_buffer            =     " Switch Off Buffer
 *        i_consistency_check           =     " Starting Consistency Check for Interface Error Recognition
@@ -739,18 +827,18 @@ class lcl_alv_grid implementation.
 *        it_alv_graphics               =     " Table of Structure DTC_S_TC
 *        it_except_qinfo               =     " Table for Exception Quickinfo
 *        ir_salv_adapter               =     " Interface ALV Adapter
-        changing
-          it_outtab                     = mt_out   " Output Table
+        CHANGING
+          it_outtab                     = st_out   " Output Table
           it_fieldcatalog               = st_fcat    " Field Catalog
 *        it_sort                       =     " Sort Criteria
 *        it_filter                     =     " Filter Criteria
-        exceptions
-          others                        = 4
+        EXCEPTIONS
+          OTHERS                        = 4
       ).
 *      hlp=>x_raise_check( sy_subrc = 'X' is_sy = sy ).
 
       cl_abap_list_layout=>suppress_toolbar( ).
-      write ' '.
+      WRITE ' '.
       cl_gui_alv_grid=>set_focus( control = so_grid ).
 
 
@@ -760,7 +848,7 @@ class lcl_alv_grid implementation.
 *                      i_any = lcl_selscreen=>sv_title && ` (&1 Einträge)`
 *                      i_v1 = lines( st_out ) )-text ).
 
-    else.
+    ELSE.
 
       so_grid->refresh_table_display(
 *      exporting
@@ -770,19 +858,19 @@ class lcl_alv_grid implementation.
 *        finished       = 1
 *        others         = 2
       ).
-      if sy-subrc <> 0.
+      IF sy-subrc <> 0.
 *     message id sy-msgid type sy-msgty number sy-msgno
 *                with sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
-      endif.
+      ENDIF.
 
-    endif.
+    ENDIF.
 
-  endmethod.
+  ENDMETHOD.
 
-  method cfw_init.
+  METHOD cfw_init.
 
-    create object so_grid
-      exporting
+    CREATE OBJECT so_grid
+      EXPORTING
 *       i_shellstyle      = 0    " Control Style
 *       i_lifetime        =     " Lifetime
         i_parent = cl_gui_container=>screen0 "screen0 "default_screen    " Parent Container
@@ -792,26 +880,26 @@ class lcl_alv_grid implementation.
 *       i_graphicsparent  =     " Container for Graphics
 *       i_name   =     " Name
 *       i_fcat_complete   = SPACE    " Boolean Variable (X=True, Space=False)
-      exceptions
-        others   = 4.
+      EXCEPTIONS
+        OTHERS   = 4.
 *    hlp=>x_raise_check( sy_subrc = 'X' is_sy = sy ).
 
-  endmethod.
+  ENDMETHOD.
 
-  method cfw_free.
+  METHOD cfw_free.
 
-    if so_grid is bound.
+    IF so_grid IS BOUND.
       so_grid->free(  ).
-    endif.
+    ENDIF.
 
-    clear so_grid.
+    CLEAR so_grid.
 
-  endmethod.
+  ENDMETHOD.
 
 
-  method set_style.
+  METHOD set_style.
 
-    loop at mt_out assigning field-symbol(<ls_out>).
+    LOOP AT st_out ASSIGNING FIELD-SYMBOL(<ls_out>).
 
 
 
@@ -853,13 +941,13 @@ class lcl_alv_grid implementation.
 *          endif.
 
 
-    endloop.
+    ENDLOOP.
 
-  endmethod.
+  ENDMETHOD.
 
-  method set_color.
+  METHOD set_color.
 
-    loop at mt_out assigning field-symbol(<ls_out>).
+    LOOP AT st_out ASSIGNING FIELD-SYMBOL(<ls_out>).
 
 *      ls_color-fname = 'BUTTON_CREATE_HU'.
 *      ls_color-color-col = 5.
@@ -867,17 +955,17 @@ class lcl_alv_grid implementation.
 *      ls_color-color-inv = 0.
 *      insert ls_color into table <ls_out>-t_alv_color.
 
-    endloop.
+    ENDLOOP.
 
-  endmethod.
+  ENDMETHOD.
 
-  method set_fcat.
+  METHOD set_fcat.
 
     hlp=>gui_cfw(
-      exporting
+      EXPORTING
         get_fcat = 'X'
-        i_any = mt_out
-      importing
+        i_any = st_out
+      IMPORTING
         e_any = st_fcat ).
 
 *    select *
@@ -886,30 +974,30 @@ class lcl_alv_grid implementation.
 *    where tabname = @lcl_selscreen=>ss_1000-pa_tabname.
 *    lcl_help=>x_raise_check( select = 'X' ).
 
-    loop at st_fcat assigning field-symbol(<ls_fcat>).
+    LOOP AT st_fcat ASSIGNING FIELD-SYMBOL(<ls_fcat>).
 
-      if <ls_fcat>-fieldname(4) = 'S_DB'.
+      IF <ls_fcat>-fieldname(4) = 'S_DB'.
         <ls_fcat>-tech = abap_true.
-      endif.
+      ENDIF.
 
 
 
-      case <ls_fcat>-fieldname.
+      CASE <ls_fcat>-fieldname.
 
-        when 'S_DB-S_EQUI-SERNR'.
+        WHEN 'S_DB-S_EQUI-SERNR'.
           <ls_fcat>-tech = abap_false.
-        when 'S_DB-S_LQUA-LGTYP'.
+        WHEN 'S_DB-S_LQUA-LGTYP'.
           <ls_fcat>-tech = abap_false.
-        when 'S_DB-S_LQUA-LGPLA'.
+        WHEN 'S_DB-S_LQUA-LGPLA'.
           <ls_fcat>-tech = abap_false.
-        when 'S_DB-S_TAS20-WERKS'.
+        WHEN 'S_DB-S_TAS20-WERKS'.
           <ls_fcat>-tech = abap_false.
           <ls_fcat>-scrtext_l = 'TAS20-Werk'.
           <ls_fcat>-scrtext_m = <ls_fcat>-scrtext_l.
           <ls_fcat>-scrtext_s = <ls_fcat>-scrtext_l.
           <ls_fcat>-reptext  = <ls_fcat>-scrtext_l.
 
-        when 'ALV_AMPEL'.
+        WHEN 'ALV_AMPEL'.
           <ls_fcat>-icon = abap_true.
           <ls_fcat>-scrtext_l = 'Status'.
           <ls_fcat>-scrtext_m = <ls_fcat>-scrtext_l.
@@ -917,28 +1005,28 @@ class lcl_alv_grid implementation.
           <ls_fcat>-reptext  = <ls_fcat>-scrtext_l.
 
 
-        when 'S_DB-S_VEKP-EXIDV'.
+        WHEN 'S_DB-S_VEKP-EXIDV'.
           <ls_fcat>-tech = abap_false.
           <ls_fcat>-scrtext_l = 'HU-1'.
           <ls_fcat>-scrtext_m = <ls_fcat>-scrtext_l.
           <ls_fcat>-scrtext_s = <ls_fcat>-scrtext_l.
           <ls_fcat>-reptext  = <ls_fcat>-scrtext_l.
 
-        when 'S_DB-S_VEKP_HEAD-EXIDV'.
+        WHEN 'S_DB-S_VEKP_HEAD-EXIDV'.
           <ls_fcat>-tech = abap_false.
           <ls_fcat>-scrtext_l = 'HU-2'.
           <ls_fcat>-scrtext_m = <ls_fcat>-scrtext_l.
           <ls_fcat>-scrtext_s = <ls_fcat>-scrtext_l.
           <ls_fcat>-reptext  = <ls_fcat>-scrtext_l.
 
-        when 'S_FILE-EXIDV_1'.
+        WHEN 'S_FILE-EXIDV_1'.
           <ls_fcat>-tech = abap_false.
           <ls_fcat>-scrtext_l = 'HU-1'.
           <ls_fcat>-scrtext_m = <ls_fcat>-scrtext_l.
           <ls_fcat>-scrtext_s = <ls_fcat>-scrtext_l.
           <ls_fcat>-reptext  = <ls_fcat>-scrtext_l.
 
-        when 'S_FILE-EXIDV_2'.
+        WHEN 'S_FILE-EXIDV_2'.
           <ls_fcat>-tech = abap_false.
           <ls_fcat>-scrtext_l = 'HU-2'.
           <ls_fcat>-scrtext_m = <ls_fcat>-scrtext_l.
@@ -957,106 +1045,106 @@ class lcl_alv_grid implementation.
 
 
 
-      endcase.
+      ENDCASE.
 
-    endloop.
+    ENDLOOP.
 
-  endmethod.
+  ENDMETHOD.
 
-  method on_data_changed.
+  METHOD on_data_changed.
 
-  endmethod.
+  ENDMETHOD.
 
-  method on_data_changed_finished.
+  METHOD on_data_changed_finished.
 
-  endmethod.
+  ENDMETHOD.
 
-  method on_toolbar.
+  METHOD on_toolbar.
 
     "Seperator
-    insert value #(
+    INSERT VALUE #(
         butn_type = 3
-     ) into table e_object->mt_toolbar.
+     ) INTO TABLE e_object->mt_toolbar.
 
 
 
-    insert value #(
+    INSERT VALUE #(
          function  = 'ZREFRESH'
          icon      = icon_refresh
          quickinfo = 'Aktualisieren'
          butn_type = 4
          disabled  = ' '
          text      = 'Aktualisieren'
-     ) into table e_object->mt_toolbar.
+     ) INTO TABLE e_object->mt_toolbar.
 
-    insert value #(
+    INSERT VALUE #(
          function  = 'ZPOST'
          icon      = icon_transport
          quickinfo = 'Einträge komplett buchen'
          butn_type = 4
          disabled  = ' '
          text      = 'Markierte Einträge komplett buchen'
-     ) into table e_object->mt_toolbar.
+     ) INTO TABLE e_object->mt_toolbar.
 
 
-    insert value #(
+    INSERT VALUE #(
 *         function  = 'ZPOST'
 *         icon      = '@K4@'
 *         quickinfo = 'Markierte Einträge komplett buchen'
          butn_type = 3
          disabled  = ' '
 *         text      = 'Markierte Einträge komplett buchen'
-     ) into table e_object->mt_toolbar.
+     ) INTO TABLE e_object->mt_toolbar.
 
-    insert value #(
+    INSERT VALUE #(
          function  = 'Z_CREATE_SERNR'
 *         icon      = '@K4@'
          quickinfo = '1. Serialnr. erstellen'
          butn_type = 4
          disabled  = ' '
          text      =  '1. Serialnr. erstellen'
-     ) into table e_object->mt_toolbar.
+     ) INTO TABLE e_object->mt_toolbar.
 
 
-    insert value #(
+    INSERT VALUE #(
          function  = 'Z_CREATE_HU1'
 *         icon      = '@K4@'
          quickinfo = '2. HU1 erstellen'
          butn_type = 4
          disabled  = ' '
          text      = '2. HU1 erstellen'
-     ) into table e_object->mt_toolbar.
+     ) INTO TABLE e_object->mt_toolbar.
 
-    insert value #(
+    INSERT VALUE #(
     function  = 'Z_CREATE_HU2'
 *         icon      = '@K4@'
     quickinfo = '3. HU2 erstellen und verpacken'
     butn_type = 4
     disabled  = ' '
     text      =  '3. HU2 erstellen und verpacken'
-) into table e_object->mt_toolbar.
+) INTO TABLE e_object->mt_toolbar.
 
-    insert value #(
+    INSERT VALUE #(
     function  = 'Z_TRANSFER_HU'
 *         icon      = '@K4@'
     quickinfo = '4. HU umbuchen'
     butn_type = 4
     disabled  = ' '
     text      =  '4. HU umbuchen'
-) into table e_object->mt_toolbar.
+) INTO TABLE e_object->mt_toolbar.
 
-    if sy-uname = 'LKALDEW'.
+    IF sy-uname = 'LKALDEW'.
 
-      insert value #(
+      INSERT VALUE #(
        function  = 'ZUNDO'
 *         icon      = '@K4@'
        quickinfo = 'Aktion Rückgängig machen'
        butn_type = 4
        disabled  = ' '
        text      = 'Aktion Rückgängig machen'
-   ) into table e_object->mt_toolbar.
+   ) INTO TABLE e_object->mt_toolbar.
 
-    endif.
+    ENDIF.
 
 *    insert value #(
 *        function  = 'ZDELETE'
@@ -1067,22 +1155,22 @@ class lcl_alv_grid implementation.
 *        text      = 'Delete selected entries'
 *    ) into table e_object->mt_toolbar.
 
-  endmethod.
+  ENDMETHOD.
 
-  method on_hotspot_click.
+  METHOD on_hotspot_click.
 
-    try.
+    TRY.
 
-        data(ls_out) = mt_out[ e_row_id ].
+        DATA(ls_out) = st_out[  e_row_id ].
 
-        case e_column_id-fieldname.
+        CASE e_column_id-fieldname.
 
-          when 'BUTTON_LOG'.
+          WHEN 'BUTTON_LOG'.
 
             hlp=>gui_popup( ls_out-t_log ).
 
 
-          when 'S_EB-S_VEKP-EXIDV'.
+          WHEN 'S_EB-S_VEKP-EXIDV'.
 
 *                      lcl_help=>call_transaction(
 *                iv_transaction_name = i_any
@@ -1093,33 +1181,32 @@ class lcl_alv_grid implementation.
 
 *            lcl_help=>gui_popup(  start_Tcode = 'X' ).
 
-        endcase.
+        ENDCASE.
 
-      catch cx_root into data(lx_root).
+      CATCH cx_root INTO DATA(lx_root).
         hlp=>gui_popup( lx_root ).
-    endtry.
+    ENDTRY.
 
-  endmethod.
+  ENDMETHOD.
 
-  method set_handler.
+  METHOD set_handler.
 
     so_grid->register_edit_event(
         i_event_id = cl_gui_alv_grid=>mc_evt_modified ).
 
-    set handler on_hotspot_click          for so_grid.
-    set handler on_toolbar                for so_grid.
-    set handler on_user_command           for so_grid.
-    set handler on_button_click           for so_grid.
-    set handler on_data_changed           for so_grid.
-    set handler on_data_changed_finished  for so_grid.
-    set handler on_button_click           for so_grid.
-    set handler on_double_click           for so_grid.
+    SET HANDLER on_hotspot_click          FOR so_grid.
+    SET HANDLER on_toolbar                FOR so_grid.
+    SET HANDLER on_user_command           FOR so_grid.
+    SET HANDLER on_button_click           FOR so_grid.
+    SET HANDLER on_data_changed           FOR so_grid.
+    SET HANDLER on_data_changed_finished  FOR so_grid.
+    SET HANDLER on_button_click           FOR so_grid.
 
-  endmethod.
+  ENDMETHOD.
 
-  method on_user_command.
+  METHOD on_user_command.
 
-    try.
+    TRY.
 
 *        lcl_help=>gui_screen( status_progress = 'X' i_any = text-002 ). "Ladevorgang...
 *        so_grid->get_selected_rows( importing et_index_rows = data(lt_alv_selected_rows) ).
@@ -1213,15 +1300,15 @@ class lcl_alv_grid implementation.
 *          when others.
 *        endcase.
 
-      catch cx_root into data(lx_root).
+      CATCH cx_root INTO DATA(lx_root).
         hlp=>gui_popup( lx_root ).
-    endtry.
+    ENDTRY.
 
-  endmethod.
+  ENDMETHOD.
 
 
 
-  method on_button_click.
+  METHOD on_button_click.
 
 *    try.
 *
@@ -1336,20 +1423,18 @@ class lcl_alv_grid implementation.
 *        lcl_help=>gui_popup( lx_root ).
 *    endtry.
 
-  endmethod.
+  ENDMETHOD.
 
 
-  method set_table.
+  METHOD set_table.
 
 **    data lr_data type ref to lcl_app=>ty_s_db.
 *    data ls_out type ty_s_out.
 *    data ls_color type lvc_s_scol.
 *    clear st_out.
 *
-    loop at go_app->mt_db reference into data(lr_data).
-
-      data(ls_out) = value ty_S_out(  ).
-      ls_out-s_balhdr = lr_data->*.
+*    loop at it_data reference into lr_data.
+*
 *      clear ls_out.
 *      ls_out-s_db = lr_data->*.
 *      ls_out-button_create_sernr = 'Serialnr. erzeugen'.
@@ -1544,14 +1629,15 @@ class lcl_alv_grid implementation.
 *
 *      endcase.
 *
-      insert ls_out into table mt_out.
-    endloop.
+*      insert ls_out into table st_out.
+*
+*    endloop.
 
 
-  endmethod.
+  ENDMETHOD.
 
 
-  method set_layout.
+  METHOD set_layout.
 
     ss_layout-cwidth_opt = 'A'.
 *    ss_layout-grid_title = 'Anpassung Customizing Stammdaten'.
@@ -1559,10 +1645,10 @@ class lcl_alv_grid implementation.
     ss_layout-stylefname = 'T_ALV_STYLE'.
     ss_layout-ctab_fname = 'T_COLOR'.
 
-  endmethod.
+  ENDMETHOD.
 
 
-  method set_variant.
+  METHOD set_variant.
 
     "U" = Benutzerbezogen
     "X" = global
@@ -1570,199 +1656,192 @@ class lcl_alv_grid implementation.
     ss_variant-report = sy-repid.
     ss_variant-handle = '001'.
 
-  endmethod.
+  ENDMETHOD.
 
 
-  method set_toolbar_excl.
+  METHOD set_toolbar_excl.
 
 *    insert cl_gui_alv_grid=>mc_fc_loc_delete_row    into table st_excl_tb.
 *    insert cl_gui_alv_grid=>mc_fc_loc_insert_row    into table rt_excl_tb.
 *    insert cl_gui_alv_grid=>mc_fc_loc_copy_row      into table rt_excl_tb.
 *    insert cl_gui_alv_grid=>mc_fc_loc_paste         into table rt_excl_tb.
 *    insert cl_gui_alv_grid=>mc_fc_loc_paste_new_row into table rt_excl_tb.
-    insert cl_gui_alv_grid=>mc_fc_graph             into table st_excl_tb.
-    insert cl_gui_alv_grid=>mc_fc_info              into table st_excl_tb.
+    INSERT cl_gui_alv_grid=>mc_fc_graph             INTO TABLE st_excl_tb.
+    INSERT cl_gui_alv_grid=>mc_fc_info              INTO TABLE st_excl_tb.
 
-  endmethod.
+  ENDMETHOD.
 
-  method on_double_click.
+ENDCLASS.
 
-    data(ls_row_click) =  mt_out[ es_row_no-row_id ].
 
-    data(lo_log) = zls_cl_log=>factory_by_bal( ls_row_click-s_balhdr-lognumber ).
 
-    go_app->mo_alv_popup->set_table( lo_log->mt_log ).
-    go_app->mo_alv_popup->cfw_display( ).
 
-  endmethod.
 
-endclass.
+CLASS lcl_popup DEFINITION.
 
-class lcl_popup definition.
+  PUBLIC SECTION.
+    DATA mo_app TYPE REF TO lcl_app.
 
-  public section.
+    DATA mo_object TYPE REF TO cl_salv_table.
+    DATA mo_dock TYPE REF TO cl_gui_docking_container.
+    DATA mt_out TYPE zls_cl_log=>ty_t_log.
 
-    data mo_app type ref to lcl_app.
-    data mo_object type ref to cl_salv_table.
-    data mo_dock type ref to cl_gui_docking_container.
-    data mt_out type zls_cl_log=>ty_t_log.
+    METHODS display
+      IMPORTING
+        is_row TYPE any.
 
-    methods display
-      importing
-        is_row type any.
 
-    methods on_toolbar_click for event added_function of cl_salv_events_table
-      importing
+    METHODS on_toolbar_click FOR EVENT added_function OF cl_salv_events_table
+      IMPORTING
         e_salv_function
         sender.
+  PROTECTED SECTION.
 
-  protected section.
-    methods init.
+    METHODS init.
 
-endclass.
+ENDCLASS.
 
-class lcl_alv_ida definition.
+CLASS lcl_alv_ida DEFINITION.
 
-  public section.
+  PUBLIC SECTION.
 
-    data mo_app type ref to lcl_app.
+    DATA mo_app TYPE REF TO lcl_app.
 
-    interfaces: if_salv_ida_calc_field_handler.
+    INTERFACES: if_salv_ida_calc_field_handler.
 
-    constants: co_table_name type dbtabl value 'BALHDR'.
+    CONSTANTS: co_table_name TYPE dbtabl VALUE 'BALHDR'.
 
 
-    types ty_S_out type balhdr. "zcl_stc_utility_bal_2102=>ty_s_log.
+    TYPES ty_S_out TYPE balhdr. "zcl_stc_utility_bal_2102=>ty_s_log.
 
-    methods: on_cell_action for event cell_action of if_salv_gui_field_display_opt
-      importing
+    METHODS: on_cell_action FOR EVENT cell_action OF if_salv_gui_field_display_opt
+      IMPORTING
         ev_field_name
         eo_row_data
         sender.
 
-    methods: on_function_selected for event function_selected of if_salv_gui_toolbar_ida
-      importing
+    METHODS: on_function_selected FOR EVENT function_selected OF if_salv_gui_toolbar_ida
+      IMPORTING
         ev_fcode
         sender.
 
-    methods: on_double_click for event double_click of if_salv_gui_table_display_opt
-      importing
+    METHODS: on_double_click FOR EVENT double_click OF if_salv_gui_table_display_opt
+      IMPORTING
         ev_field_name
         eo_row_data
         sender.
 
-    data mv_is_checked type abap_bool value abap_true.
-    data: mo_object type ref to if_salv_gui_table_ida.
+    DATA mv_is_checked TYPE abap_bool VALUE abap_true.
+    DATA: mo_object TYPE REF TO if_salv_gui_table_ida.
 
-    methods init.
+    METHODS init.
 
-  private section.
-    types:
-      begin of ty_calc_field,
-        icon   type char4,
-        button type lvc_value,
-      end of ty_calc_field.
+  PRIVATE SECTION.
+    TYPES:
+      BEGIN OF ty_calc_field,
+        icon   TYPE char4,
+        button TYPE lvc_value,
+      END OF ty_calc_field.
 
-    types: begin of ty_line.
-             include type sflight.
-             include type ty_calc_field.
-    types: end of ty_line.
+    TYPES: BEGIN OF ty_line.
+             INCLUDE TYPE sflight.
+             INCLUDE TYPE ty_calc_field.
+    TYPES: END OF ty_line.
 
-endclass.
-
-class lcl_popup implementation.
-
-  method display.
+ENDCLASS.
 
 
-    data(ls_row) = conv lcl_alv_ida=>ty_S_out( is_row ).
 
-    if mo_dock is initial.
+CLASS lcl_popup IMPLEMENTATION.
+
+  METHOD display.
+
+
+    DATA(ls_row) = CONV lcl_alv_ida=>ty_S_out( is_row ).
+
+    IF mo_dock IS INITIAL.
       init( ).
 
-    endif.
+    ENDIF.
 
-    mt_out = corresponding #( zls_cl_log=>factory_by_bal( ls_row-lognumber
+    mt_out = CORRESPONDING #( zls_cl_log=>factory_by_bal( ls_row-lognumber
                               )->mt_log
                                ).
 
-    mo_object->get_display_settings( )->set_list_header( value = conv #(
+    mo_object->get_display_settings( )->set_list_header( value = CONV #(
      `Log ` && shift_left( val = ls_row-lognumber sub = '0' ) && ` | tcode ` && ls_row-altcode && ` | user ` && ls_row-aluser && ` (#`
-       && shift_right( conv string( lines( mt_out ) )  ) && `)` ) ).
+       && shift_right( CONV string( lines( mt_out ) )  ) && `)` ) ).
 
     mo_dock->set_visible( abap_true ).
     mo_object->refresh( ).
 
-  endmethod.
+  ENDMETHOD.
 
 
-  method init.
-    try.
+  METHOD init.
 
-        create object mo_dock.
+    CREATE OBJECT mo_dock.
 
-        mo_dock->dock_at(
-          exporting
-            side              = cl_gui_docking_container=>dock_at_bottom
+    mo_dock->dock_at(
+      EXPORTING
+        side              = cl_gui_docking_container=>dock_at_bottom
 *      EXCEPTIONS
 *        cntl_error        = 1
 *        cntl_system_error = 2
 *        others            = 3
-        ).
+    ).
 
-        mo_dock->set_height(
-          exporting
-            height     = 180
+    mo_dock->set_height(
+      EXPORTING
+        height     = 180
 *  EXCEPTIONS
 *    cntl_error = 1
 *    others     = 2
-        ).
-        if sy-subrc <> 0.
+    ).
+    IF sy-subrc <> 0.
 * MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
 *   WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
-        endif.
+    ENDIF.
 
-        cl_salv_table=>factory(
-               exporting
-                 r_container  = mo_dock
-               importing
-                 r_salv_table = mo_object
-               changing
-                 t_table      = mt_out
-             ).
+    cl_salv_table=>factory(
+           EXPORTING
+             r_container  = mo_dock
+           IMPORTING
+             r_salv_table = mo_object
+           CHANGING
+             t_table      = mt_out
+         ).
 
-        mo_object->get_columns( )->get_column( columnname = 'IS_DB_ENTRY' )->set_technical( if_salv_c_bool_sap=>true  ).
-        mo_object->get_columns( )->get_column( columnname = 'MESSAGE' )->set_output_length( value = '90' ).
-        mo_object->get_columns( )->get_column( columnname = 'TSTMP' )->set_technical( if_salv_c_bool_sap=>true  ).
-        mo_object->get_columns( )->get_column( columnname = 'V1' )->set_technical( if_salv_c_bool_sap=>true  ).
-        mo_object->get_columns( )->get_column( columnname = 'V2' )->set_technical( if_salv_c_bool_sap=>true  ).
-        mo_object->get_columns( )->get_column( columnname = 'V3' )->set_technical( if_salv_c_bool_sap=>true  ).
-        mo_object->get_columns( )->get_column( columnname = 'V4' )->set_technical( if_salv_c_bool_sap=>true  ).
-        mo_object->get_functions( )->add_function( name = 'ZHIDE'
-                                             icon = |{ icon_cancel }|
+    mo_object->get_columns( )->get_column( columnname = 'IS_DB_ENTRY' )->set_technical( if_salv_c_bool_sap=>true  ).
+    mo_object->get_columns( )->get_column( columnname = 'MESSAGE' )->set_output_length( value = '90' ).
+    mo_object->get_columns( )->get_column( columnname = 'TSTMP' )->set_technical( if_salv_c_bool_sap=>true  ).
+    mo_object->get_columns( )->get_column( columnname = 'V1' )->set_technical( if_salv_c_bool_sap=>true  ).
+    mo_object->get_columns( )->get_column( columnname = 'V2' )->set_technical( if_salv_c_bool_sap=>true  ).
+    mo_object->get_columns( )->get_column( columnname = 'V3' )->set_technical( if_salv_c_bool_sap=>true  ).
+    mo_object->get_columns( )->get_column( columnname = 'V4' )->set_technical( if_salv_c_bool_sap=>true  ).
+    mo_object->get_functions( )->add_function( name = 'ZHIDE'
+                                         icon = |{ icon_cancel }|
 *                                         text = 'Export'
-                                             tooltip = 'close'
-                                             position = if_salv_c_function_position=>right_of_salv_functions ).
+                                         tooltip = 'close'
+                                         position = if_salv_c_function_position=>right_of_salv_functions ).
 
-        mo_object->get_display_settings( )->set_list_header_size( value = '1' ).
-        mo_object->get_functions( )->set_default( ).
+    mo_object->get_display_settings( )->set_list_header_size( value = '1' ).
+    mo_object->get_functions( )->set_default( ).
 
-        "Eventhandler für Klicks in die Toolbar des SALV-Grids setzen
-        set handler on_toolbar_click for mo_object->get_event( ).
+    "Eventhandler für Klicks in die Toolbar des SALV-Grids setzen
+    SET HANDLER on_toolbar_click FOR mo_object->get_event( ).
 
-        mo_object->display( ).
+    mo_object->display( ).
 
-      catch cx_root.
-    endtry.
-  endmethod.
+  ENDMETHOD.
 
-  method on_toolbar_click.
+  METHOD on_toolbar_click.
 
-    case e_salv_function.
-      when 'ZHIDE'.
-        data lv_c type c.
+    CASE e_salv_function.
+      WHEN 'ZHIDE'.
+        DATA lv_c TYPE c.
         mo_dock->get_visible(
-          importing
+          IMPORTING
             visible           = lv_c
         ).
         cl_gui_cfw=>flush(
@@ -1771,37 +1850,35 @@ class lcl_popup implementation.
 *            cntl_error        = 2
 *            others            = 3
         ).
-        if sy-subrc <> 0.
+        IF sy-subrc <> 0.
 *         MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
 *           WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
-        endif.
+        ENDIF.
 
-        if lv_c = abap_false.
+        IF lv_c = abap_false.
           mo_dock->set_visible( abap_true ).
 
-        else.
+        ELSE.
           mo_dock->set_visible( abap_false ).
-        endif.
+        ENDIF.
         .
-    endcase.
+    ENDCASE.
 
-  endmethod.
+  ENDMETHOD.
 
-endclass.
+ENDCLASS.
 
-class lcl_alv_ida implementation.
 
-  method init.
+
+CLASS lcl_alv_ida IMPLEMENTATION.
+
+  METHOD init.
 
 
 *    if pa_table is INITIAL.
 *    mo_object = cl_salv_gui_table_ida=>create_for_cds_view( iv_cds_view_name = co_table_name ).
 *    else.
-    try.
-        mo_object = cl_salv_gui_table_ida=>create( iv_table_name = conv #(  co_table_name ) ).
-      catch cx_salv_db_connection cx_salv_ida_contract_violation.
-        "handle exception
-    endtry.
+     mo_object = cl_salv_gui_table_ida=>create( iv_table_name = conv #(  co_table_name ) ).
 
 
 
@@ -1880,7 +1957,7 @@ class lcl_alv_ida implementation.
 *                                                            iv_tooltip_text_long = 'Erweiterung: 100 Zeichen zur Verfügung bei richtiger SAP GUI und SAP Basis Version' ).
 
 * Sortierungen festlegen
-    data(it_sort_order) = value if_salv_gui_types_ida=>yt_sort_rule(
+    DATA(it_sort_order) = VALUE if_salv_gui_types_ida=>yt_sort_rule(
      ( field_name = 'ALDATE' descending = abap_true is_grouped = abap_false )
          ( field_name = 'ALTIME' descending = abap_true is_grouped = abap_false )
                                                                        ).
@@ -1934,7 +2011,7 @@ class lcl_alv_ida implementation.
 *  its_field_names = lts_field_names ).
 
 * Layouts verwalten
-    mo_object->layout_persistence( )->set_persistence_options( is_persistence_key           = value #( report_name = sy-repid )
+    mo_object->layout_persistence( )->set_persistence_options( is_persistence_key           = VALUE #( report_name = sy-repid )
                                                                 i_global_save_allowed        = abap_true
                                                                 i_user_specific_save_allowed = abap_true ).
 *
@@ -1961,7 +2038,7 @@ class lcl_alv_ida implementation.
 
 
 * Click-Handler für Icons und Buttons aktivieren
-    set handler on_function_selected for mo_object->toolbar( ).
+    SET HANDLER on_function_selected FOR mo_object->toolbar( ).
 
 *    CATCH cx_salv_ida_gui_fcode_reserved.
 
@@ -1988,70 +2065,70 @@ class lcl_alv_ida implementation.
 *      ENDIF.
 * Double-Click für alle Zellen
     mo_object->display_options( )->enable_double_click( ).
-    set handler on_double_click for mo_object->display_options( ).
+    SET HANDLER on_double_click FOR mo_object->display_options( ).
 
 
 
-  endmethod.
+  ENDMETHOD.
 
-  method on_cell_action.
-    data: lv_row type ty_line.
+  METHOD on_cell_action.
+    DATA: lv_row TYPE ty_line.
 
-    eo_row_data->get_row_data( exporting
+    eo_row_data->get_row_data( EXPORTING
                                  iv_request_type = if_salv_gui_selection_ida=>cs_request_type-all_fields
-                               importing
+                               IMPORTING
                                  es_row = lv_row ).
 
     cl_salv_ida_show_data_row=>display( iv_text = |Datenfeld: { ev_field_name }|
                                         is_data = lv_row ).
-  endmethod.
+  ENDMETHOD.
 
-  method if_salv_ida_calc_field_handler~get_calc_field_structure.
+  METHOD if_salv_ida_calc_field_handler~get_calc_field_structure.
 * Struktur-Deklaration für zus. Felder ICON und BUTTON zurückgeben
-    ro_calc_field_structure = cast cl_abap_structdescr( cl_abap_structdescr=>describe_by_name( 'TY_CALC_FIELD' ) ).
-  endmethod.
+    ro_calc_field_structure = CAST cl_abap_structdescr( cl_abap_structdescr=>describe_by_name( 'TY_CALC_FIELD' ) ).
+  ENDMETHOD.
 
-  method if_salv_ida_calc_field_handler~get_requested_fields.
-  endmethod.
+  METHOD if_salv_ida_calc_field_handler~get_requested_fields.
+  ENDMETHOD.
 
-  method if_salv_ida_calc_field_handler~calculate_line.
+  METHOD if_salv_ida_calc_field_handler~calculate_line.
 
 * Daten akt. Zeile holen
-    data(lv_sflight) = conv sflight( is_data_base_line ).
+    DATA(lv_sflight) = CONV sflight( is_data_base_line ).
 
 * Freie Sitze ausrechnen
-    data(lv_cnt_free_seats) = lv_sflight-seatsmax - lv_sflight-seatsocc.
+    DATA(lv_cnt_free_seats) = lv_sflight-seatsmax - lv_sflight-seatsocc.
 
 * Calculated Fields bestimmen
-    es_calculated_fields = cond ty_calc_field( when lv_cnt_free_seats = 0  then value #( icon = icon_red_light    button = icon_delete )
-                                               when lv_cnt_free_seats > 10 then value #( icon = icon_green_light  button = icon_okay )
-                                                                           else value #( icon = icon_yellow_light button = space )
+    es_calculated_fields = COND ty_calc_field( WHEN lv_cnt_free_seats = 0  THEN VALUE #( icon = icon_red_light    button = icon_delete )
+                                               WHEN lv_cnt_free_seats > 10 THEN VALUE #( icon = icon_green_light  button = icon_okay )
+                                                                           ELSE VALUE #( icon = icon_yellow_light button = space )
                                              ).
 
-  endmethod.
+  ENDMETHOD.
 
-  method if_salv_ida_calc_field_handler~start_page.
-  endmethod.
+  METHOD if_salv_ida_calc_field_handler~start_page.
+  ENDMETHOD.
 
-  method if_salv_ida_calc_field_handler~end_page.
-  endmethod.
+  METHOD if_salv_ida_calc_field_handler~end_page.
+  ENDMETHOD.
 
-  method on_function_selected.
+  METHOD on_function_selected.
 
-    data lr_range_type type range of char1.
+    DATA lr_range_type TYPE RANGE OF char1.
 
-    if mv_is_checked = abap_true.
+    IF mv_is_checked = abap_true.
       mv_is_checked = abap_false.
-      lr_range_type = value #( ( sign = 'E' option = 'EQ' low = 'E' ) ).
-    else.
+      lr_range_type = VALUE #( ( sign = 'E' option = 'EQ' low = 'E' ) ).
+    ELSE.
       mv_is_checked = abap_true.
-      lr_range_type = value #( ( sign = 'I' option = 'EQ' low = 'E' ) ).
-    endif.
+      lr_range_type = VALUE #( ( sign = 'I' option = 'EQ' low = 'E' ) ).
+    ENDIF.
 
-    data(lo_collector) = new cl_salv_range_tab_collector( ).
+    DATA(lo_collector) = NEW cl_salv_range_tab_collector( ).
 
     lo_collector->add_ranges_for_name( iv_name = 'TYPE' it_ranges =  lr_range_type ).
-    lo_collector->get_collected_ranges( importing et_named_ranges = data(lt_name_range_pairs) ).
+    lo_collector->get_collected_ranges( IMPORTING et_named_ranges = DATA(lt_name_range_pairs) ).
     mo_object->set_select_options( it_ranges = lt_name_range_pairs ).
 
 *    sender->mt
@@ -2064,79 +2141,74 @@ class lcl_alv_ida implementation.
 
 *    BREAK-POINT.
 
-  endmethod.
+  ENDMETHOD.
 
-  method on_double_click.
-    try.
+  METHOD on_double_click.
+    TRY.
 *    DATA: lv_row TYPE sflight.
-*        data(ls_row) = value ty_s_out( ).
-** Daten der geklickten Zeile holen
-*        eo_row_data->get_row_data( exporting
-*                                     iv_request_type = if_salv_gui_selection_ida=>cs_request_type-all_fields
-**                                    its_requested_fields = VALUE #( ( CONV #( 'LOGNUMBER' ) ) )
-*                                   importing
-*                                     es_row =  ls_row ).
+        DATA(ls_row) = VALUE ty_s_out( ).
+* Daten der geklickten Zeile holen
+        eo_row_data->get_row_data( EXPORTING
+                                     iv_request_type = if_salv_gui_selection_ida=>cs_request_type-all_fields
+*                                    its_requested_fields = VALUE #( ( CONV #( 'LOGNUMBER' ) ) )
+                                   IMPORTING
+                                     es_row =  ls_row ).
 
 * Daten anzeigen
 *    cl_salv_ida_show_data_row=>display( iv_text = |Datenfeld: { ev_field_name }|
 *                                        is_data = ls_row ).
 
-*        mo_app->mo_alv_popup->display( ls_row ).
+        mo_app->mo_alv_popup->display( ls_row ).
 
 
-      catch cx_root into data(lx).
+      CATCH cx_root INTO DATA(lx).
         hlp=>gui_popup( lx ).
-    endtry.
-  endmethod.
+    ENDTRY.
+  ENDMETHOD.
 
-endclass.
+ENDCLASS.
 
-class lcl_app implementation.
 
-  method factory.
 
-    if so_app is not bound.
-      so_app = new #( ).
-      so_app->mo_selscreen = new #( ).
-      so_app->mo_alv_main = new #( ).
-      so_app->mo_alv_popup = new #( ).
-    endif.
+CLASS lcl_app IMPLEMENTATION.
+
+  METHOD factory.
+
+    IF so_app IS NOT BOUND.
+      so_app = NEW #( ).
+      so_app->mo_selscreen = NEW #( ).
+      so_app->mo_selscreen->mo_app = so_app.
+      so_app->mo_alv_main = NEW #( ).
+      so_app->mo_alv_main->mo_app = so_app.
+      so_app->mo_alv_popup = NEW #( ).
+      so_app->mo_alv_popup->mo_app = so_app.
+    ENDIF.
 
     result = so_app.
 
-  endmethod.
+  ENDMETHOD.
 
 
-  method main.
+  METHOD main.
 
-    db_read(  ).
+    mo_alv_main->init( ).
+    mo_alv_main->mo_object->fullscreen( )->display( ).
 
-    mo_alv_main->set_table( ).
-    mo_alv_main->cfw_display( ).
+  ENDMETHOD.
 
-  endmethod.
+ENDCLASS.
 
+*LOAD-OF-PROGRAM.
 
-  method db_read.
-
-    select *
-    from balhdr
-    into corresponding fields of table mt_db
-    where object in mo_selscreen->ss_1000-so_obj.
-
-  endmethod.
-
-endclass.
-
-initialization.
-  go_app = lcl_app=>factory( ).
+INITIALIZATION.
+  DATA(go_app) = lcl_app=>factory( ).
   go_app->mo_selscreen->on_init( ).
 
-at selection-screen output.
-  go_app->mo_selscreen->on_output(  ).
+AT SELECTION-SCREEN OUTPUT.
+*  go_app->mo_selscreen->on_output(  ).
 
-at selection-screen.
-  go_app->mo_selscreen->on_screen( ).
+AT SELECTION-SCREEN.
+*  go_app->mo_selscreen->on_screen( ).
 
-start-of-selection.
+START-OF-SELECTION.
   go_app->mo_selscreen->on_start(  ).
