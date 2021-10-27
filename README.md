@@ -1,2 +1,2 @@
-# toolkit_abap_cloud
+# Simple BAL
 library that simplifies ABAP development
