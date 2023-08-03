@@ -8,7 +8,7 @@
    <REQUIREMENTS>
     <item>
      <COMPONENT>abap</COMPONENT>
-     <MIN_RELEASE>753</MIN_RELEASE>
+     <MIN_RELEASE>740</MIN_RELEASE>
     </item>
    </REQUIREMENTS>
   </DATA>
