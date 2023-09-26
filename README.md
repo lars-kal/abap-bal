@@ -1,2 +1,2 @@
 # Simple BAL
-library that simplifies ABAP development
+library that simplifies BAL logging
